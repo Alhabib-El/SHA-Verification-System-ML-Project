@@ -85,6 +85,37 @@ table.dt tr:hover td{background:#fafafa}
 .upload-zone:hover{border-color:#1D9E75;color:#0F6E56}
 .toast-box{position:fixed;bottom:20px;right:20px;padding:11px 18px;border-radius:8px;font-size:13px;color:#fff;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .add-form{background:#f8f9fb;border-radius:8px;padding:14px;margin-top:12px;display:none}
+.report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.report-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.report-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.rc-pdf{background:#FAECE7;color:#D85A30}
+.rc-csv{background:#E1F5EE;color:#0F6E56}
+.rc-audit{background:#E6F1FB;color:#185FA5}
+.report-card-title{font-size:13px;font-weight:600;color:#1a1a2e}
+.report-card-desc{font-size:12px;color:#888;line-height:1.5;flex:1}
+.date-filter-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:14px;flex-wrap:wrap}
+.date-filter-row .form-group{flex:1;min-width:140px}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.preview-table th{background:#1F4E79;color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:500}
+.preview-table td{padding:7px 10px;border-bottom:1px solid #f0f0f0}
+.preview-table tr:nth-child(even) td{background:#EAF2FF}
+.preview-table tr:hover td{background:#dceeff}
+.report-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:20px}
+.rs-generating{background:#FAEEDA;color:#854F0B}
+.rs-ready{background:#E1F5EE;color:#0F6E56}
+.dl-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:none;font-family:inherit;font-weight:500;transition:all .15s}
+.dl-pdf{background:#FAECE7;color:#D85A30}
+.dl-pdf:hover{background:#F0997B;color:#fff}
+.dl-csv{background:#E1F5EE;color:#0F6E56}
+.dl-csv:hover{background:#1D9E75;color:#fff}
+.dl-audit{background:#E6F1FB;color:#185FA5}
+.dl-audit:hover{background:#185FA5;color:#fff}
+.summary-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:#f8f9fb;border-radius:8px;padding:12px;text-align:center}
+.stat-num{font-size:24px;font-weight:600;color:#1a1a2e}
+.stat-lbl{font-size:11px;color:#888;margin-top:2px}
+.progress-bar-bg{background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;margin-top:4px}
+.progress-bar{height:100%;border-radius:4px;background:#1D9E75;transition:width .4s}
 
 /* ── FOOTER SECTION box: Includes the logos with titles */
 .site-footer{
@@ -342,7 +373,6 @@ table.dt tr:hover td{background:#fafafa}
       </div>
     </div>
   </div>
-
 </div><!-- /.main-content -->
 
 <!--FOOTER WITH LOGOS: SHA, MKU & MOH. Includes project title, my admission number and department -->
@@ -369,7 +399,6 @@ table.dt tr:hover td{background:#fafafa}
     </div>
   </div>
 </footer>
-
 <div class="toast-box" id="toast"></div>
 
 <script>
