@@ -39,20 +39,20 @@ PACKAGE_MAP = {"SHIF Basic": 0, "Primary Healthcare Fund": 1, "Chronic Illness F
 
 # ICD-10 chapter grouping (simplified — production uses a full lookup table)
 DIAGNOSIS_CATEGORY_MAP = {
-    "J18.0": 0,  # Respiratory
-    "A09":   1,  # Infectious/parasitic
-    "K35":   2,  # Digestive
-    "O80":   3,  # Pregnancy/childbirth
-    "E11":   4,  # Endocrine/metabolic
+    "A000":   0,   # Cholera
+    "A01000": 1,  # Typhoid fever
+    "A021":   2,  # Salmonella infection
+    "S14116D":   3,  # Lesion at C6
+    "Z131":   4,  # Screening for diabetes mellitus
 }
 
 # Clinically valid diagnosis-procedure pairs (simplified rule table)
 VALID_DIAGNOSIS_PROCEDURE_PAIRS = {
-    ("J18.0", "99232"), ("J18.0", "99233"),
-    ("A09", "99232"),
-    ("K35", "44950"),
-    ("O80", "59400"),
-    ("E11", "83036"),
+    ("A000", "99232"), ("A000", "99233"),
+    ("A01000", "99232"),
+    ("A021", "44950"),
+    ("S14116D", "59400"),
+    ("Z131", "83036"),
 }
 
 

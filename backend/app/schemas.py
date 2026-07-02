@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 # ── Claims ──────────────────────────────────────────────────────────────────
 class ClaimSubmitRequest(BaseModel):
-    patient_sha_member_no: str = Field(..., example="SHA-2024-00123")
+    patient_sha_member_no: str = Field(..., example="SHA-2019-42945")
     provider_id: str            = Field(..., example="PRV-001")
     service_date: date
     diagnosis_code: str          = Field(..., example="J18.0")
