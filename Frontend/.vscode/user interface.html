@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHA Claims Verification System — User Interface</title>
+<title>SHA Claims Verification System — UI Prototype</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css">
 <style>
-*{box-sizing:border-box}
-body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;color:#1a1a2e;margin:0;display:flex;flex-direction:column;min-height:100vh}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;color:#1a1a2e;display:flex;flex-direction:column;min-height:100vh}
 .topbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#1a1a2e}
-.brand .dot{width:9px;height:9px;border-radius:50%;background:#4b12cf}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:#1D9E75}
 .user-info{font-size:12px;color:#666;display:flex;align-items:center;gap:6px}
-.nav-tabs-custom{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 16px;display:flex;gap:0}
-.nav-tab{padding:10px 16px;font-size:13px;border:none;background:none;cursor:pointer;color:#666;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:6px}
-.nav-tab.active{color:#4b12cf;border-bottom-color:#4b12cf;font-weight:500}
+.nav-tabs-custom{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 12px;display:flex;gap:0;overflow-x:auto}
+.nav-tab{padding:10px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:#666;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.nav-tab.active{color:#1D9E75;border-bottom-color:#1D9E75;font-weight:500}
 .nav-tab:hover:not(.active){color:#1a1a2e;background:#f8f8f8}
 .badge-count{background:#FAECE7;color:#993C1D;border-radius:10px;padding:1px 7px;font-size:10px}
 .main-content{flex:1;padding:20px;max-width:980px;margin:0 auto;width:100%}
@@ -27,27 +27,29 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;c
 .form-group.full{grid-column:1/-1}
 label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 input,select,textarea{width:100%;padding:8px 11px;border:1px solid #ddd;border-radius:7px;font-size:13px;background:#fff;color:#1a1a2e;font-family:inherit;outline:none;transition:border .2s}
-input:focus,select:focus,textarea:focus{border-color:#4b12cf;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+input:focus,select:focus,textarea:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
 textarea{min-height:70px;resize:vertical}
 .elig-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:20px;margin-top:4px}
-.badge-ok{background:#E1F5EE;color:#4b12cf}
+.badge-ok{background:#E1F5EE;color:#0F6E56}
 .badge-warn{background:#FAECE7;color:#993C1D}
 .hint{font-size:11px;color:#888;margin-top:3px}
 .ratio-warn{font-size:11px;color:#993C1D;font-weight:600;margin-top:3px}
 .btn{padding:8px 16px;border-radius:7px;font-size:13px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#1a1a2e;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
 .btn:hover{background:#f4f4f4}
-.btn-primary{background:#4b12cf;color:#fff;border-color:#4b12cf}
-.btn-primary:hover{background:#4b12cf}
+.btn-primary{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btn-primary:hover{background:#0F6E56}
 .btn-danger{background:#D85A30;color:#fff;border-color:#D85A30}
 .btn-danger:hover{background:#993C1D}
 .btn-warn{background:#BA7517;color:#fff;border-color:#BA7517}
 .btn-warn:hover{background:#854F0B}
+.btn-info{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-info:hover{background:#0C447C}
 .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .metric{background:#f8f9fb;border-radius:8px;padding:12px 14px}
 .metric-label{font-size:11px;color:#888;margin-bottom:4px}
 .metric-val{font-size:22px;font-weight:600}
-.metric-val.green{color:#4b12cf}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
+.metric-val.green{color:#0F6E56}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}.metric-val.blue{color:#185FA5}
 table.dt{width:100%;border-collapse:collapse;font-size:12px}
 table.dt th{text-align:left;padding:7px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 table.dt td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
@@ -55,10 +57,10 @@ table.dt tr:hover td{background:#fafafa}
 .score-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
 .sc-high{background:#FAECE7;color:#993C1D}
 .sc-med{background:#FAEEDA;color:#854F0B}
-.sc-ok{background:#E1F5EE;color:#4b12cf}
+.sc-ok{background:#E1F5EE;color:#0F6E56}
 .st-pill{font-size:11px;padding:3px 9px;border-radius:20px}
 .st-flag{background:#FAECE7;color:#993C1D}
-.st-app{background:#E1F5EE;color:#4b12cf}
+.st-app{background:#E1F5EE;color:#0F6E56}
 .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .section-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .detail-row{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}
@@ -71,20 +73,22 @@ table.dt tr:hover td{background:#fafafa}
 .shap-val{font-size:11px;font-weight:600;min-width:38px;text-align:right}
 .shap-val.up{color:#993C1D}.shap-val.dn{color:#0F6E56}
 .check-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0}
-.ck-ok{color:#4b12cf}.ck-fail{color:#993C1D}
+.ck-ok{color:#0F6E56}.ck-fail{color:#993C1D}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .search-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
 .search-row input{flex:1}
 .search-row select{width:auto;min-width:120px}
 .act-btn{background:none;border:none;cursor:pointer;font-size:12px;font-family:inherit;padding:0 4px}
-.act-edit{color:#4b12cf}.act-del{color:#993C1D}
+.act-edit{color:#0F6E56}.act-del{color:#993C1D}
 .prov-pill{font-size:11px;padding:2px 8px;border-radius:20px}
-.pp-active{background:#E1F5EE;color:#4b12cf}
+.pp-active{background:#E1F5EE;color:#0F6E56}
 .pp-susp{background:#FAECE7;color:#993C1D}
 .upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;color:#888;font-size:12px;cursor:pointer;transition:border .2s}
 .upload-zone:hover{border-color:#1D9E75;color:#0F6E56}
-.toast-box{position:fixed;bottom:20px;right:20px;padding:11px 18px;border-radius:8px;font-size:13px;color:#fff;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.toast-box{position:fixed;bottom:80px;right:20px;padding:11px 18px;border-radius:8px;font-size:13px;color:#fff;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18)}
 .add-form{background:#f8f9fb;border-radius:8px;padding:14px;margin-top:12px;display:none}
+
+/* ── REPORT SCREEN ─────────────────────────────── */
 .report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
 .report-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .report-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
@@ -117,64 +121,21 @@ table.dt tr:hover td{background:#fafafa}
 .progress-bar-bg{background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden;margin-top:4px}
 .progress-bar{height:100%;border-radius:4px;background:#1D9E75;transition:width .4s}
 
-/* ── FOOTER SECTION box: Includes the logos with titles */
-.site-footer{
-  background:#ffffff;
-  border-top:1px solid #e0e0e0;
-  padding:14px 20px;
-  margin-top:auto;
-}
-.footer-inner{
-  max-width:980px;
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
-}
-.footer-logos{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:32px;
-  flex-wrap:wrap;
-}
-.footer-logo-item{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:4px;
-}
-.footer-logo-item img{
-  height:40px;
-  width:auto;
-  object-fit:contain;
-  filter:none;
-}
-.footer-divider{
-  width:1px;
-  height:40px;
-  background:#e0e0e0;
-}
-.footer-text{
-  font-size:10px;
-  color:#aaa;
-  text-align:center;
-  line-height:1.5;
-}
-.footer-tagline{
-  font-size:11px;
-  color:#888;
-  text-align:center;
-  letter-spacing:.3px;
-}
+/* ── FOOTER ─────────────────────────────────────── */
+.site-footer{background:#fff;border-top:1px solid #e0e0e0;padding:14px 20px;margin-top:auto}
+.footer-inner{max-width:980px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.footer-logos{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}
+.footer-logo-item img{height:38px;width:auto;object-fit:contain}
+.footer-divider{width:1px;height:38px;background:#e0e0e0}
+.footer-text{font-size:10px;color:#aaa;text-align:center;line-height:1.5}
+.footer-tagline{font-size:11px;color:#888;text-align:center;letter-spacing:.3px}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="brand"><span class="dot"></span>SHA Claims Verification System</div>
-  <div class="user-info"><i class="ti ti-user"></i><span id="current-user">Provider: Mount Kenya University Teaching and Referral Hospital</span></div>
+  <div class="user-info"><i class="ti ti-user"></i><span id="current-user">Provider: Kenyatta NH</span></div>
 </div>
 
 <div class="nav-tabs-custom">
@@ -182,11 +143,12 @@ table.dt tr:hover td{background:#fafafa}
   <button class="nav-tab" onclick="showScreen('queue',this)"><i class="ti ti-list-check"></i>Officer Queue<span class="badge-count">3</span></button>
   <button class="nav-tab" onclick="showScreen('review',this)"><i class="ti ti-eye"></i>Claim Review</button>
   <button class="nav-tab" onclick="showScreen('admin',this)"><i class="ti ti-settings"></i>Admin / CRUD</button>
+  <button class="nav-tab" onclick="showScreen('reports',this)"><i class="ti ti-chart-bar"></i>Reports</button>
 </div>
 
 <div class="main-content">
 
-  <!-- Screen Interface 1: Submit claim -->
+  <!-- SCREEN 1: SUBMIT -->
   <div class="screen active" id="screen-submit">
     <div class="card">
       <div class="card-title"><i class="ti ti-file-plus"></i>Submit new insurance claim</div>
@@ -194,7 +156,7 @@ table.dt tr:hover td{background:#fafafa}
         <div class="form-group">
           <label>SHA member no.</label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="member-no" placeholder="e.g. SHA-2019-42945" style="flex:1">
+            <input type="text" id="member-no" placeholder="e.g. SHA-2024-00123" style="flex:1">
             <button class="btn" onclick="verifyEligibility()">Verify</button>
           </div>
           <div id="elig-result"></div>
@@ -209,11 +171,11 @@ table.dt tr:hover td{background:#fafafa}
           <label>Diagnosis code (ICD-10)</label>
           <select id="diag-code" onchange="updateTariff()">
             <option value="">— select —</option>
-            <option value="A000">A000 — Cholera</option>
-            <option value="A0100">A0100 — Typhoid fever</option>
-            <option value="A021">A021 — Salmonella infection</option>
-            <option value="S14116D">S14116D — Lesion at C6 </option>
-            <option value="Z131">Z131 — Encounter for screening for diabetes</option>
+            <option value="J18.0">J18.0 — Pneumonia</option>
+            <option value="A09">A09 — Diarrhoea</option>
+            <option value="K35">K35 — Appendicitis</option>
+            <option value="O80">O80 — Normal delivery</option>
+            <option value="E11">E11 — Type 2 diabetes</option>
           </select>
         </div>
         <div class="form-group">
@@ -257,37 +219,35 @@ table.dt tr:hover td{background:#fafafa}
     </div>
   </div>
 
-  <!-- Screen Interface 2: Officer Queue -->
+  <!-- SCREEN 2: QUEUE -->
   <div class="screen" id="screen-queue">
     <div class="metrics">
       <div class="metric"><div class="metric-label">Today's claims</div><div class="metric-val">248</div></div>
-      <div class="metric"><div class="metric-label">Auto-verified</div><div class="metric-val blue">231</div></div>
+      <div class="metric"><div class="metric-label">Auto-verified</div><div class="metric-val green">231</div></div>
       <div class="metric"><div class="metric-label">Flagged</div><div class="metric-val red">14</div></div>
       <div class="metric"><div class="metric-label">Avg. score</div><div class="metric-val amber">0.62</div></div>
     </div>
     <div class="card">
       <div class="section-head">
-        <div class="card-title" style="margin:0"><i class="ti ti-alert-triangle"></i>Flagged claims: awaiting review</div>
+        <div class="card-title" style="margin:0"><i class="ti ti-alert-triangle"></i>Flagged claims — awaiting review</div>
         <select style="width:auto;font-size:12px;padding:5px 10px">
-          <option>All counties</option><option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Kiambu</option><option>Siaya</option><option>Samburu</option>
+          <option>All counties</option><option>Nairobi</option><option>Kisumu</option><option>Mombasa</option>
         </select>
       </div>
       <table class="dt">
-        <thead>
-          <tr><th>Claim ID</th><th>Provider</th><th>Diagnosis</th><th>Amount (KES)</th><th>XGBoost score</th><th>Status</th><th>Action</th></tr>
-        </thead>
+        <thead><tr><th>Claim ID</th><th>Provider</th><th>Diagnosis</th><th>Amount (KES)</th><th>XGBoost score</th><th>Status</th><th>Action</th></tr></thead>
         <tbody id="queue-tbody"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- Screen Interface 3: Claims Review -->
+  <!-- SCREEN 3: REVIEW -->
   <div class="screen" id="screen-review">
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
         <div>
           <div style="font-size:14px;font-weight:600">SHA-25-04882</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">Submitted 14 Mar 2025 · Mount Kenya University Teaching and Referral Hospital, Nairobi</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Submitted 14 Mar 2025 · City Hospital, Nairobi</div>
         </div>
         <span class="score-pill sc-high" style="font-size:13px;padding:5px 12px">Score: 0.87 ● HIGH RISK</span>
       </div>
@@ -297,7 +257,7 @@ table.dt tr:hover td{background:#fafafa}
           <div class="detail-row">
             <span class="lbl">Patient</span><span>John Kamau</span>
             <span class="lbl">Provider</span><span>City Hospital</span>
-            <span class="lbl">Diagnosis</span><span>A000 — Cholera</span>
+            <span class="lbl">Diagnosis</span><span>J18.0 — Pneumonia</span>
             <span class="lbl">Procedure</span><span>99233 — Complex care</span>
             <span class="lbl">SHA tariff</span><span>KES 2,330</span>
             <span class="lbl">Claimed</span><span style="color:#993C1D;font-weight:600">KES 9,800</span>
@@ -329,7 +289,7 @@ table.dt tr:hover td{background:#fafafa}
     <p style="font-size:11px;color:#aaa;text-align:center"><i class="ti ti-info-circle"></i> Decision and SHAP-viewed status are recorded in the audit log</p>
   </div>
 
-  <!-- Screen Interface 4: Admin -->
+  <!-- SCREEN 4: ADMIN -->
   <div class="screen" id="screen-admin">
     <div class="card">
       <div class="section-head">
@@ -340,24 +300,22 @@ table.dt tr:hover td{background:#fafafa}
         <input type="text" id="prov-search" placeholder="Search by name or ID…" oninput="filterProviders()">
         <select id="county-filter" onchange="filterProviders()">
           <option value="">All counties</option>
-          <option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Kiambu</option><option>Siaya</option><option>Samburu</option>
+          <option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option>
         </select>
         <select id="status-filter" onchange="filterProviders()">
           <option value="">All statuses</option><option>Active</option><option>Suspended</option>
         </select>
       </div>
       <table class="dt">
-        <thead>
-          <tr><th>Provider ID</th><th>Name</th><th>County</th><th>Type</th><th>Status</th><th>Actions</th></tr>
-        </thead>
+        <thead><tr><th>Provider ID</th><th>Name</th><th>County</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="prov-tbody"></tbody>
       </table>
       <div class="add-form" id="add-form">
         <div style="font-size:13px;font-weight:600;margin-bottom:12px"><i class="ti ti-plus"></i> Add new provider</div>
         <div class="form-row">
-          <div class="form-group"><label>Provider name</label><input type="text" id="new-name" placeholder="e.g. Mt Kenya University Teaching & Referral Hospital"></div>
+          <div class="form-group"><label>Provider name</label><input type="text" id="new-name" placeholder="e.g. Aga Khan Hospital"></div>
           <div class="form-group"><label>County</label>
-            <select id="new-county"><option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Kiambu</option><option>Siaya</option><option>Samburu</option></select>
+            <select id="new-county"><option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option><option>Eldoret</option></select>
           </div>
         </div>
         <div class="form-row">
@@ -373,32 +331,117 @@ table.dt tr:hover td{background:#fafafa}
       </div>
     </div>
   </div>
-</div><!-- /.main-content -->
 
-<!--FOOTER WITH LOGOS: SHA, MKU & MOH. Includes project title, my admission number and department -->
+  <!-- SCREEN 5: REPORTS ─────────────────────────────────────── -->
+  <div class="screen" id="screen-reports">
+
+    <!-- Summary metrics -->
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Reports generated this month</div><div class="metric-val blue">47</div></div>
+      <div class="metric"><div class="metric-label">Last report generated</div><div class="metric-val" style="font-size:14px;padding-top:4px">Today, 08:32</div></div>
+      <div class="metric"><div class="metric-label">Audit entries this month</div><div class="metric-val">1,284</div></div>
+      <div class="metric"><div class="metric-label">Flagged claims exported</div><div class="metric-val red">312</div></div>
+    </div>
+
+    <!-- Report type cards -->
+    <div class="report-grid">
+      <div class="report-card">
+        <div class="report-card-icon rc-pdf"><i class="ti ti-file-type-pdf"></i></div>
+        <div class="report-card-title">Verification Summary</div>
+        <div class="report-card-desc">Daily claims summary and provider performance table for a selected date range. For SHA management review meetings.</div>
+        <button class="dl-btn dl-pdf" onclick="generateReport('pdf')"><i class="ti ti-download"></i>Generate PDF</button>
+      </div>
+      <div class="report-card">
+        <div class="report-card-icon rc-audit"><i class="ti ti-shield-check"></i></div>
+        <div class="report-card-title">Audit Trail Export</div>
+        <div class="report-card-desc">Complete officer decision log with comments and SHAP-viewed status. For compliance and accountability auditing (FR-09).</div>
+        <button class="dl-btn dl-audit" onclick="generateReport('audit')"><i class="ti ti-download"></i>Export CSV</button>
+      </div>
+      <div class="report-card">
+        <div class="report-card-icon rc-csv"><i class="ti ti-flag"></i></div>
+        <div class="report-card-title">Flagged Claims Export</div>
+        <div class="report-card-desc">All flagged claims with XGBoost scores and top SHAP features. Used for model behaviour analysis in evaluation.</div>
+        <button class="dl-btn dl-csv" onclick="generateReport('flagged')"><i class="ti ti-download"></i>Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Date filter + preview -->
+    <div class="card">
+      <div class="section-head">
+        <div class="card-title" style="margin:0"><i class="ti ti-calendar-stats"></i>Report parameters</div>
+        <div id="report-status-badge"></div>
+      </div>
+      <div class="date-filter-row">
+        <div class="form-group">
+          <label>Start date</label>
+          <input type="date" id="rpt-start" value="2025-03-01">
+        </div>
+        <div class="form-group">
+          <label>End date</label>
+          <input type="date" id="rpt-end" value="2025-03-31">
+        </div>
+        <div class="form-group">
+          <label>County filter</label>
+          <select id="rpt-county">
+            <option value="">All counties</option>
+            <option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Report type</label>
+          <select id="rpt-type" onchange="updatePreview()">
+            <option value="summary">Verification Summary</option>
+            <option value="audit">Audit Trail</option>
+            <option value="flagged">Flagged Claims</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="runReport()" style="margin-top:16px;white-space:nowrap">
+          <i class="ti ti-refresh"></i>Preview data
+        </button>
+      </div>
+
+      <!-- Live preview table -->
+      <div id="preview-area"></div>
+    </div>
+
+    <!-- Provider performance chart (mini bar chart) -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-chart-bar"></i>Provider flag rate — top 5 this month</div>
+      <div id="bar-chart"></div>
+    </div>
+
+    <!-- Recent report downloads log -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-history"></i>Recent downloads</div>
+      <table class="dt">
+        <thead><tr><th>Report type</th><th>Generated by</th><th>Date / time</th><th>Format</th><th>Status</th></tr></thead>
+        <tbody id="download-log"></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- END REPORTS SCREEN -->
+
+</div>
+
+<!-- ════════ FOOTER ════════ -->
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-tagline">In collaboration with</div>
     <div class="footer-logos">
-      <div class="footer-logo-item">
-        <img src="https://github.com/Alhabib-El/SHA-Verification-System-ML-Project/blob/main/References/sha.png?raw=true" alt="SHA Logo">
-      </div>
+      <div class="footer-logo-item"><img src="https://github.com/Alhabib-El/SHA-Verification-System-ML-Project/blob/main/References/sha.png ?raw=true" alt="SHA Logo"></div>
       <div class="footer-divider"></div>
-      <div class="footer-logo-item">
-        <img src="https://github.com/Alhabib-El/SHA-Verification-System-ML-Project/blob/main/References/mku%20logo%202.jpg?raw=true" alt="Mount Kenya University Logo">
-      </div>
+      <div class="footer-logo-item"><img src="https://github.com/Alhabib-El/SHA-Verification-System-ML-Project/blob/main/References/mku%20logo%202.jpg" alt="MKU Logo"></div>
       <div class="footer-divider"></div>
-      <div class="footer-logo-item">
-        <img src="https://github.com/Alhabib-El/SHA-Verification-System-ML-Project/blob/main/References/MOH.png?raw=true" alt="Ministry of Health Logo">
-      </div>
+      <div class="footer-logo-item"><img src="https://github.com/Alhabib-El/SHA-Verification-System-ML-Project/blob/main/References/MOH.png" alt="MOH Logo"></div>
     </div>
     <div class="footer-text">
-      Design and Evaluation of a Machine Learning Pipeline for Health Insurance Claims Verification In Kenya's Social Health Authority <br>
-       ©BIT/2019/42945<br>
-      Mount Kenya University &nbsp;·&nbsp; School of Computing and Informatics.
+      SHA Claims Verification System &nbsp;|&nbsp; BIT/2019/42945 — Elvis Paul Sichemo<br>
+      Mount Kenya University &nbsp;·&nbsp; School of Computing and Informatics &nbsp;·&nbsp; 2025–2026
     </div>
   </div>
 </footer>
+
 <div class="toast-box" id="toast"></div>
 
 <script>
@@ -407,7 +450,148 @@ const QUEUE=[{id:'SHA-25-04882',prov:'City Hospital',diag:'J18.0 Pneumonia',amt:
 const SHAP=[{lbl:'Billed amount is 4.2x SHA tariff',val:0.34,dir:'up'},{lbl:'Provider: 312 claims this month',val:0.28,dir:'up'},{lbl:'Same diagnosis claimed 3x in 30 days',val:0.19,dir:'up'},{lbl:'Provider empanelled 47 days ago',val:0.11,dir:'up'},{lbl:'Provider 91% historical approval rate',val:0.08,dir:'dn'}];
 let providers=[{id:'PRV-001',name:'City Hospital',county:'Nairobi',type:'Hospital',status:'Active'},{id:'PRV-002',name:'Kisumu Hospital',county:'Kisumu',type:'Hospital',status:'Active'},{id:'PRV-003',name:'MedLab Plus',county:'Mombasa',type:'Laboratory',status:'Suspended'},{id:'PRV-004',name:'Nakuru Clinic',county:'Nakuru',type:'Clinic',status:'Active'}];
 let nextId=5;
-function showScreen(name,btn){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');btn.classList.add('active');const users={submit:'Provider: Kenyatta NH',queue:'Officer: J. Mwangi',review:'Officer: J. Mwangi',admin:'Admin: S. Otieno'};document.getElementById('current-user').textContent=users[name];if(name==='queue')renderQueue();if(name==='review')renderShap();if(name==='admin')filterProviders();}
+
+const SUMMARY_DATA=[
+  {date:'01 Mar',total:54,approved:48,flagged:6,score:0.61,ratio:1.42},
+  {date:'02 Mar',total:61,approved:55,flagged:6,score:0.58,ratio:1.38},
+  {date:'03 Mar',total:48,approved:41,flagged:7,score:0.64,ratio:1.51},
+  {date:'04 Mar',total:72,approved:63,flagged:9,score:0.67,ratio:1.63},
+  {date:'05 Mar',total:43,approved:40,flagged:3,score:0.52,ratio:1.21},
+];
+const AUDIT_DATA=[
+  {log:'LOG-A001',claim:'SHA-25-04882',officer:'J. Mwangi',action:'Rejected',comment:'Billing 4.2x tariff confirmed inflated',shap:'Yes',time:'14 Mar 09:12'},
+  {log:'LOG-A002',claim:'SHA-25-04891',officer:'J. Mwangi',action:'Approved',comment:'Provider confirmed genuine case on call',shap:'Yes',time:'14 Mar 09:45'},
+  {log:'LOG-A003',claim:'SHA-25-04901',officer:'A. Kamau',action:'Escalated',comment:'Unclear diagnosis — sent to senior',shap:'Yes',time:'14 Mar 10:03'},
+  {log:'LOG-A004',claim:'SHA-25-04755',officer:'A. Kamau',action:'Approved',comment:'All checks passed, normal billing',shap:'No',time:'14 Mar 10:22'},
+];
+const FLAGGED_DATA=[
+  {id:'SHA-25-04882',prov:'City Hospital',diag:'J18.0',amt:'9,800',ratio:'4.21',score:'0.87',feature:'Billed amount is 4.2x tariff',status:'Rejected'},
+  {id:'SHA-25-04891',prov:'Nairobi Clinic',diag:'A09',amt:'5,200',ratio:'2.89',score:'0.76',feature:'Provider 312 claims/month',status:'Approved'},
+  {id:'SHA-25-04901',prov:'MedLab Plus',diag:'E11',amt:'7,500',ratio:'8.33',score:'0.73',feature:'Same diagnosis x3/30d',status:'Escalated'},
+  {id:'SHA-25-04912',prov:'Kisumu Hospital',diag:'K35',amt:'31,000',ratio:'1.72',score:'0.61',feature:'Provider empanelled 47d ago',status:'Pending'},
+];
+const DOWNLOAD_LOG=[
+  {type:'Verification Summary',by:'S. Otieno (Admin)',time:'Today, 08:32',fmt:'PDF',status:'ready'},
+  {type:'Audit Trail Export',by:'J. Mwangi (Officer)',time:'Yesterday, 17:05',fmt:'CSV',status:'ready'},
+  {type:'Flagged Claims Export',by:'S. Otieno (Admin)',time:'Yesterday, 14:20',fmt:'CSV',status:'ready'},
+  {type:'Verification Summary',by:'A. Kamau (Officer)',time:'12 Mar, 09:15',fmt:'PDF',status:'ready'},
+];
+const PROVIDER_FLAGS=[
+  {name:'MedLab Plus',flagged:31,total:58},
+  {name:'City Hospital',flagged:24,total:214},
+  {name:'Nairobi Clinic',flagged:18,total:97},
+  {name:'Kisumu Hospital',flagged:12,total:145},
+  {name:'Nakuru Clinic',flagged:5,total:63},
+];
+
+function showScreen(name,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  btn.classList.add('active');
+  const users={submit:'Provider: Kenyatta NH',queue:'Officer: J. Mwangi',review:'Officer: J. Mwangi',admin:'Admin: S. Otieno',reports:'Admin: S. Otieno'};
+  document.getElementById('current-user').textContent=users[name];
+  if(name==='queue')renderQueue();
+  if(name==='review')renderShap();
+  if(name==='admin')filterProviders();
+  if(name==='reports')initReports();
+}
+
+function initReports(){
+  updatePreview();
+  renderBarChart();
+  renderDownloadLog();
+}
+
+function updatePreview(){ runReport(false); }
+
+function runReport(showToast=true){
+  const type=document.getElementById('rpt-type').value;
+  const area=document.getElementById('preview-area');
+  const badge=document.getElementById('report-status-badge');
+  badge.innerHTML='<span class="report-status rs-generating"><i class="ti ti-loader"></i> Generating…</span>';
+  setTimeout(()=>{
+    badge.innerHTML='<span class="report-status rs-ready"><i class="ti ti-circle-check"></i> Preview ready</span>';
+    if(type==='summary') renderSummaryPreview(area);
+    else if(type==='audit') renderAuditPreview(area);
+    else renderFlaggedPreview(area);
+    if(showToast) toast('Report preview updated','#1D9E75');
+  },600);
+}
+
+function renderSummaryPreview(area){
+  let rows=SUMMARY_DATA.map(r=>`<tr>
+    <td>${r.date}</td><td>${r.total}</td>
+    <td style="color:#0F6E56">${r.approved}</td>
+    <td style="color:#993C1D">${r.flagged}</td>
+    <td>${r.score.toFixed(3)}</td>
+    <td>${r.ratio.toFixed(2)}x</td>
+  </tr>`).join('');
+  area.innerHTML=`<p style="font-size:11px;color:#888;margin-bottom:6px">Preview — Verification Summary (first 5 days)</p>
+  <table class="preview-table"><thead><tr><th>Date</th><th>Total</th><th>Approved</th><th>Flagged</th><th>Avg Score</th><th>Avg Ratio</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderAuditPreview(area){
+  let rows=AUDIT_DATA.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:11px">${r.log}</td>
+    <td style="font-family:monospace;font-size:11px">${r.claim}</td>
+    <td>${r.officer}</td>
+    <td style="color:${r.action==='Rejected'?'#993C1D':r.action==='Approved'?'#0F6E56':'#854F0B'};font-weight:600">${r.action}</td>
+    <td>${r.shap==='Yes'?'<i class="ti ti-check" style="color:#0F6E56"></i>':'<i class="ti ti-x" style="color:#aaa"></i>'}</td>
+    <td style="color:#888">${r.time}</td>
+  </tr>`).join('');
+  area.innerHTML=`<p style="font-size:11px;color:#888;margin-bottom:6px">Preview — Audit Trail (4 entries shown)</p>
+  <table class="preview-table"><thead><tr><th>Log ID</th><th>Claim ID</th><th>Officer</th><th>Action</th><th>SHAP viewed</th><th>Timestamp</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderFlaggedPreview(area){
+  let rows=FLAGGED_DATA.map(r=>`<tr>
+    <td style="font-family:monospace;font-size:11px">${r.id}</td>
+    <td>${r.prov}</td><td>${r.diag}</td>
+    <td>KES ${r.amt}</td>
+    <td style="color:#993C1D;font-weight:600">${r.ratio}x</td>
+    <td><span class="score-pill sc-high">${r.score}</span></td>
+    <td style="font-size:11px;color:#666">${r.feature}</td>
+    <td style="color:${r.status==='Rejected'?'#993C1D':r.status==='Approved'?'#0F6E56':'#854F0B'};font-weight:600">${r.status}</td>
+  </tr>`).join('');
+  area.innerHTML=`<p style="font-size:11px;color:#888;margin-bottom:6px">Preview — Flagged Claims with SHAP Top Feature</p>
+  <div style="overflow-x:auto"><table class="preview-table"><thead><tr><th>Claim ID</th><th>Provider</th><th>Diagnosis</th><th>Amount</th><th>Ratio</th><th>Score</th><th>Top SHAP Feature</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderBarChart(){
+  const max=Math.max(...PROVIDER_FLAGS.map(p=>p.flagged));
+  const bars=PROVIDER_FLAGS.map(p=>{
+    const pct=Math.round(p.flagged/p.total*100);
+    const w=Math.round(p.flagged/max*100);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div style="width:130px;font-size:12px;color:#444;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+      <div style="flex:1;background:#f0f0f0;border-radius:4px;height:20px;overflow:hidden">
+        <div style="width:${w}%;background:#D85A30;height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+          <span style="font-size:11px;color:#fff;font-weight:600;white-space:nowrap">${p.flagged} flagged</span>
+        </div>
+      </div>
+      <div style="width:40px;font-size:11px;color:#993C1D;font-weight:600;text-align:right">${pct}%</div>
+    </div>`;
+  }).join('');
+  document.getElementById('bar-chart').innerHTML=bars;
+}
+
+function renderDownloadLog(){
+  const tb=document.getElementById('download-log');
+  tb.innerHTML=DOWNLOAD_LOG.map(r=>`<tr>
+    <td><i class="ti ${r.fmt==='PDF'?'ti-file-type-pdf':'ti-file-type-csv'}" style="color:${r.fmt==='PDF'?'#D85A30':'#0F6E56'}"></i> ${r.type}</td>
+    <td>${r.by}</td><td style="color:#888">${r.time}</td>
+    <td><span style="font-size:11px;font-weight:600;color:${r.fmt==='PDF'?'#D85A30':'#0F6E56'}">${r.fmt}</span></td>
+    <td><span class="report-status rs-ready" style="font-size:10px"><i class="ti ti-circle-check"></i> Ready</span></td>
+  </tr>`).join('');
+}
+
+function generateReport(type){
+  const labels={pdf:'Verification Summary PDF',audit:'Audit Trail CSV',flagged:'Flagged Claims CSV'};
+  toast('Generating '+labels[type]+'…','#185FA5');
+  setTimeout(()=>toast(labels[type]+' ready — downloading','#1D9E75'),1800);
+}
+
 function verifyEligibility(){const v=document.getElementById('member-no').value.trim(),el=document.getElementById('elig-result');el.innerHTML=v?'<span class="elig-badge badge-ok"><i class="ti ti-circle-check"></i> Active member — SHIF Basic package</span>':'<span class="elig-badge badge-warn"><i class="ti ti-alert-circle"></i> Enter a member number first</span>';}
 function updateTariff(){const d=document.getElementById('diag-code').value,p=document.getElementById('proc-code').value,k=d+'-'+p,t=TARIFFS[k];document.getElementById('tariff-display').value=t?'KES '+t.amt.toLocaleString():'';document.getElementById('tariff-hint').textContent=t?t.lbl:(d&&p?'No tariff match for this combination':'');computeRatio();}
 function computeRatio(){const d=document.getElementById('diag-code').value,p=document.getElementById('proc-code').value,k=d+'-'+p,t=TARIFFS[k],c=parseFloat(document.getElementById('claimed-amt').value)||0,el=document.getElementById('ratio-display');if(!t||!c){el.innerHTML='';return;}const r=c/t.amt;el.innerHTML=r>2?`<div class="ratio-warn">⚠ Amount ratio: ${r.toFixed(2)}x — billing anomaly detected</div>`:r>1.2?`<div class="hint" style="color:#854F0B">Ratio: ${r.toFixed(2)}x — slightly above tariff</div>`:`<div class="hint">Ratio: ${r.toFixed(2)}x — within range ✓</div>`;}
