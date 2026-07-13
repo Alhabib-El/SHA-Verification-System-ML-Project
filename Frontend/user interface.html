@@ -10,22 +10,24 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;color:#1a1a2e;display:flex;flex-direction:column;min-height:100vh}
 /* Login */
-.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-wrap{flex:1;display:flex;flex-direction:column;padding:20px 40px}
+.login-box-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
 .login-box{background:#fff;border-radius:12px;padding:32px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.10)}
 .login-logo{text-align:center;margin-bottom:20px}
-.login-logo .dot{width:12px;height:12px;background:#1D9E75;border-radius:50%;display:inline-block;margin-right:6px}
 .login-title{font-size:18px;font-weight:600;margin-bottom:4px}
 .login-sub{font-size:12px;color:#888;margin-bottom:24px;text-align:center}
 .login-error{background:#FAECE7;color:#993C1D;border-radius:7px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+.login-footer{display:flex;justify-content:center;border-top:1px solid #e0e0e0;padding-top:14px}
+.login-footer-title{font-size:14px;color:#555;line-height:1.5;max-width:640px;text-align:center}
 /* App */
 .app-wrap{display:none;flex-direction:column;min-height:100vh}
 .topbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
-.brand .dot{width:9px;height:9px;border-radius:50%;background:#1D9E75}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:#189B86}
 .user-info{display:flex;align-items:center;gap:12px;font-size:12px;color:#666}
 .nav-tabs-custom{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 12px;display:flex;overflow-x:auto}
 .nav-tab{padding:10px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:#666;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.nav-tab.active{color:#1D9E75;border-bottom-color:#1D9E75;font-weight:500}
+.nav-tab.active{color:#189B86;border-bottom-color:#189B86;font-weight:500}
 .nav-tab:hover:not(.active){color:#1a1a2e;background:#f8f8f8}
 .badge-count{background:#FAECE7;color:#993C1D;border-radius:10px;padding:1px 7px;font-size:10px}
 .main-content{flex:1;padding:20px;max-width:980px;margin:0 auto;width:100%}
@@ -37,31 +39,31 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;c
 .form-group.full{grid-column:1/-1}
 label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 input,select,textarea{width:100%;padding:8px 11px;border:1px solid #ddd;border-radius:7px;font-size:13px;background:#fff;color:#1a1a2e;font-family:inherit;outline:none;transition:border .2s}
-input:focus,select:focus,textarea:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+input:focus,select:focus,textarea:focus{border-color:#189B86;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
 textarea{min-height:70px;resize:vertical}
 .hint{font-size:11px;color:#888;margin-top:3px}
 .ratio-warn{font-size:11px;color:#993C1D;font-weight:600;margin-top:3px}
 .btn{padding:8px 16px;border-radius:7px;font-size:13px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#1a1a2e;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
 .btn:hover{background:#f4f4f4}
-.btn-primary{background:#1D9E75;color:#fff;border-color:#1D9E75}
-.btn-primary:hover{background:#0F6E56}
+.btn-primary{background:#189B86;color:#fff;border-color:#189B86}
+.btn-primary:hover{background:#0D6F63}
 .btn-danger{background:#D85A30;color:#fff;border-color:#D85A30}
 .btn-warn{background:#BA7517;color:#fff;border-color:#BA7517}
-.btn-info{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-info{background:#1B3B6F;color:#fff;border-color:#1B3B6F}
 .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .metric{background:#f8f9fb;border-radius:8px;padding:12px 14px}
 .metric-label{font-size:11px;color:#888;margin-bottom:4px}
 .metric-val{font-size:22px;font-weight:600}
-.metric-val.green{color:#0F6E56}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
+.metric-val.green{color:#0D6F63}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
 table.dt{width:100%;border-collapse:collapse;font-size:12px}
 table.dt th{text-align:left;padding:7px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase}
 table.dt td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
 table.dt tr:hover td{background:#fafafa}
 .score-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
-.sc-high{background:#FAECE7;color:#993C1D}.sc-med{background:#FAEEDA;color:#854F0B}.sc-ok{background:#E1F5EE;color:#0F6E56}
+.sc-high{background:#FAECE7;color:#993C1D}.sc-med{background:#FAEEDA;color:#854F0B}.sc-ok{background:#DFF3F1;color:#0D6F63}
 .st-pill{font-size:11px;padding:3px 9px;border-radius:20px}
-.st-flag{background:#FAECE7;color:#993C1D}.st-app{background:#E1F5EE;color:#0F6E56}.st-pend{background:#EEF2FF;color:#3730A3}
+.st-flag{background:#FAECE7;color:#993C1D}.st-app{background:#DFF3F1;color:#0D6F63}.st-pend{background:#EEF2FF;color:#3730A3}
 .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .section-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .detail-row{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}
@@ -72,24 +74,24 @@ table.dt tr:hover td{background:#fafafa}
 .shap-bar-bg{width:90px;height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden}
 .shap-bar{height:100%;border-radius:4px}
 .shap-val{font-size:11px;font-weight:600;min-width:38px;text-align:right}
-.shap-val.up{color:#993C1D}.shap-val.dn{color:#0F6E56}
+.shap-val.up{color:#993C1D}.shap-val.dn{color:#0D6F63}
 .check-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0}
-.ck-ok{color:#0F6E56}.ck-fail{color:#993C1D}
+.ck-ok{color:#0D6F63}.ck-fail{color:#993C1D}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .search-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
 .search-row input{flex:1}
 .search-row select{width:auto;min-width:120px}
 .act-btn{background:none;border:none;cursor:pointer;font-size:12px;font-family:inherit;padding:0 6px}
-.act-edit{color:#0F6E56}.act-del{color:#993C1D}
+.act-edit{color:#0D6F63}.act-del{color:#993C1D}
 .prov-pill{font-size:11px;padding:2px 8px;border-radius:20px}
-.pp-active{background:#E1F5EE;color:#0F6E56}.pp-susp{background:#FAECE7;color:#993C1D}
+.pp-active{background:#DFF3F1;color:#0D6F63}.pp-susp{background:#FAECE7;color:#993C1D}
 .flag-progress{display:flex;align-items:center;gap:6px}
 .flag-bar-bg{width:60px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
 .flag-bar{height:100%;border-radius:3px}
 .risk-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
-.risk-high{background:#FAECE7;color:#993C1D}.risk-med{background:#FAEEDA;color:#854F0B}.risk-low{background:#E1F5EE;color:#0F6E56}
+.risk-high{background:#FAECE7;color:#993C1D}.risk-med{background:#FAEEDA;color:#854F0B}.risk-low{background:#DFF3F1;color:#0D6F63}
 .upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;color:#888;font-size:12px;cursor:pointer}
-.upload-zone:hover{border-color:#1D9E75;color:#0F6E56}
+.upload-zone:hover{border-color:#189B86;color:#0D6F63}
 .add-form{background:#f8f9fb;border-radius:8px;padding:14px;margin-top:12px;display:none}
 .suspension-banner{background:#FAECE7;border:1px solid #F0997B;border-left:4px solid #D85A30;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:none;animation:slideDown .3s ease}
 .suspension-banner.visible{display:flex;align-items:flex-start;gap:12px}
@@ -111,11 +113,11 @@ table.dt tr:hover td{background:#fafafa}
 .report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
 .report-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .report-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.rc-pdf{background:#FAECE7;color:#D85A30}.rc-audit{background:#E6F1FB;color:#185FA5}.rc-csv{background:#E1F5EE;color:#0F6E56}
+.rc-pdf{background:#FAECE7;color:#D85A30}.rc-audit{background:#E3E8F0;color:#1B3B6F}.rc-csv{background:#DFF3F1;color:#0D6F63}
 .dl-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:none;font-family:inherit;font-weight:500}
 .dl-pdf{background:#FAECE7;color:#D85A30}.dl-pdf:hover{background:#D85A30;color:#fff}
-.dl-audit{background:#E6F1FB;color:#185FA5}.dl-audit:hover{background:#185FA5;color:#fff}
-.dl-csv{background:#E1F5EE;color:#0F6E56}.dl-csv:hover{background:#1D9E75;color:#fff}
+.dl-audit{background:#E3E8F0;color:#1B3B6F}.dl-audit:hover{background:#1B3B6F;color:#fff}
+.dl-csv{background:#DFF3F1;color:#0D6F63}.dl-csv:hover{background:#189B86;color:#fff}
 .loading{text-align:center;padding:30px;color:#aaa;font-size:13px}
 .error-msg{background:#FAECE7;color:#993C1D;border-radius:7px;padding:10px 14px;font-size:12px;margin-bottom:10px;display:none}
 .toast-box{position:fixed;bottom:80px;right:20px;padding:11px 18px;border-radius:8px;font-size:13px;color:#fff;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18)}
@@ -145,7 +147,7 @@ table.dt tr:hover td{background:#fafafa}
 <!-- REINSTATE MODAL -->
 <div class="modal-overlay" id="reinstate-modal">
   <div class="modal-box">
-    <div class="modal-title"><i class="ti ti-shield-check" style="color:#1D9E75"></i>Reinstate Provider</div>
+    <div class="modal-title"><i class="ti ti-shield-check" style="color:#189B86"></i>Reinstate Provider</div>
     <div class="modal-subtitle">Reinstating <strong id="reinstate-prov-name"></strong>. Risk tier remains HIGH after reinstatement.</div>
     <div class="form-group">
       <label>Documented reason (required)</label>
@@ -160,33 +162,38 @@ table.dt tr:hover td{background:#fafafa}
 
 <!-- ══ LOGIN SCREEN ══════════════════════════════════════════════════════════ -->
 <div class="login-wrap" id="login-wrap">
-  <div class="login-box">
-    <div class="login-logo">
-      <span class="dot"></span>
-      <span style="font-size:16px;font-weight:600">SHA Claims Verification</span>
-    </div>
-    <p class="login-sub">Sign in to access the verification system</p>
-    <div class="login-error" id="login-error"></div>
-    <div class="form-group" style="margin-bottom:12px">
-      <label>Email address</label>
-      <input type="email" id="login-email" placeholder="e.g. j.mwangi@sha.go.ke"
-             onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div class="form-group" style="margin-bottom:18px">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••"
-             onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="login-btn">
-      <i class="ti ti-login"></i>Sign in
-    </button>
-    <div style="margin-top:16px;padding:10px;background:#f8f9fb;border-radius:7px;font-size:11px;color:#888">
-      <strong>Test accounts:</strong><br>
-      Officer: j.mwangi@sha.go.ke / Officer@2025<br>
-      Admin: s.otieno@sha.go.ke / Admin@2025<br>
-      Provider: portal@kenyattanh.go.ke / Provider@2025
+  <div class="login-box-area">
+    <div class="login-box">
+      <div class="login-logo">
+        <img src="https://raw.githubusercontent.com/Alhabib-El/SHA-Verification-System-ML-Project/main/References/sha.png" alt="SHA" style="height:22px;width:auto;object-fit:contain;margin-right:6px;vertical-align:middle">
+        <span style="font-size:16px;font-weight:600">SHA Claims Verification</span>
+      </div>
+      <p class="login-sub">Sign in to access the verification system</p>
+      <div class="login-error" id="login-error"></div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Email address</label>
+        <input type="email" id="login-email" placeholder="e.g. sichemo@mylife.mku.ac.ke"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="form-group" style="margin-bottom:18px">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="login-btn">
+        <i class="ti ti-login"></i>Sign in
+      </button>
+      <div style="margin-top:16px;padding:10px;background:#f8f9fb;border-radius:7px;font-size:11px;color:#888">
+        <strong>Test accounts:</strong><br>
+        Officer: j.mwangi@sha.go.ke / Officer@2025<br>
+        Admin: s.otieno@sha.go.ke / Admin@2025<br>
+        Provider: portal@kenyattanh.go.ke / Provider@2025
+      </div>
     </div>
   </div>
+  <footer class="login-footer">
+    <div class="login-footer-title">Design and Evaluation of a Machine Learning Pipeline for Health Insurance Claims Verification In Kenya's Social Health Authority.<br>BIT/2019/42945 &nbsp;·&nbsp; <br> Mount Kenya University · School of Computing and Informatics</div>
+  </footer>
 </div>
 
 <!-- ══ APP (shown after login) ══════════════════════════════════════════════ -->
@@ -196,7 +203,7 @@ table.dt tr:hover td{background:#fafafa}
     <div class="brand"><span class="dot"></span>SHA Claims Verification System</div>
     <div class="user-info">
       <span id="topbar-user"></span>
-      <span id="topbar-role" style="background:#E1F5EE;color:#0F6E56;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase"></span>
+      <span id="topbar-role" style="background:#DFF3F1;color:#0D6F63;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase"></span>
       <button class="btn" onclick="doLogout()" style="padding:4px 10px;font-size:11px">
         <i class="ti ti-logout"></i>Logout
       </button>
@@ -307,7 +314,7 @@ table.dt tr:hover td{background:#fafafa}
           <tbody id="queue-tbody"></tbody>
         </table>
         <div id="queue-empty" style="display:none;text-align:center;padding:30px;color:#aaa;font-size:13px">
-          <i class="ti ti-circle-check" style="font-size:24px;display:block;margin-bottom:8px;color:#1D9E75"></i>
+          <i class="ti ti-circle-check" style="font-size:24px;display:block;margin-bottom:8px;color:#189B86"></i>
           No flagged claims awaiting review
         </div>
       </div>
@@ -425,7 +432,7 @@ table.dt tr:hover td{background:#fafafa}
       <div style="font-size:11px;color:#888">In collaboration with</div>
       <div class="footer-logos">
          <div class="footer-logo-item"><img src="https://raw.githubusercontent.com/Alhabib-El/SHA-Verification-System-ML-Project/main/References/Socisl%20Health%20Authority.png" alt="Social Health Authority"></div>
-        <div class="footer-logo-item"><img src="https://raw.githubusercontent.com/Alhabib-El/SHA-Verification-System-ML-Project/main/References/MKU.jpg" alt="Mount Kenya University"></div>
+        <div class="footer-logo-item"><img src="https://raw.githubusercontent.com/Alhabib-El/SHA-Verification-System-ML-Project/main/References/mku%20logo%202.jpg" alt="Mount Kenya University"></div>
         <div class="footer-divider"></div>
         <div class="footer-logo-item"><img src="https://raw.githubusercontent.com/Alhabib-El/SHA-Verification-System-ML-Project/main/References/MOH.png" alt="Ministry of Health"></div>
       </div>
@@ -589,15 +596,15 @@ async function submitClaim() {
     errEl.style.display = 'block'; return;
   }
   try {
-    toast('Submitting claim to API...', '#185FA5');
+    toast('Submitting claim to API...', '#1B3B6F');
     const data = await api('POST', '/claims/submit', body);
     const resultEl = document.getElementById('submit-result');
     const score = data.verification?.xgboost_score;
     const flagged = data.verification?.is_flagged;
     resultEl.style.display = 'block';
     resultEl.innerHTML = `
-      <div style="background:${flagged?'#FAECE7':'#E1F5EE'};border-radius:8px;padding:14px;border-left:4px solid ${flagged?'#D85A30':'#1D9E75'}">
-        <div style="font-weight:600;color:${flagged?'#993C1D':'#0F6E56'};margin-bottom:6px">
+      <div style="background:${flagged?'#FAECE7':'#DFF3F1'};border-radius:8px;padding:14px;border-left:4px solid ${flagged?'#D85A30':'#189B86'}">
+        <div style="font-weight:600;color:${flagged?'#993C1D':'#0D6F63'};margin-bottom:6px">
           <i class="ti ti-${flagged?'alert-triangle':'circle-check'}"></i>
           Claim ${data.claim_id} — ${flagged?'FLAGGED FOR REVIEW':'VERIFIED'}
         </div>
@@ -607,7 +614,7 @@ async function submitClaim() {
           ${flagged?'<span style="color:#888">Next step</span><span>Claim routed to officer review queue</span>':'<span style="color:#888">Next step</span><span>Claim routed to approval queue</span>'}
         </div>
       </div>`;
-    toast('Claim submitted and verified ✓', '#1D9E75');
+    toast('Claim submitted and verified ✓', '#189B86');
   } catch(e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';
@@ -706,7 +713,7 @@ async function openReview(claimId) {
     const shapHtml = features.length
       ? features.map(f => {
           const w = Math.round(Math.abs(f.value)/0.34*100);
-          const col = f.direction==='up'?'#D85A30':'#1D9E75';
+          const col = f.direction==='up'?'#D85A30':'#189B86';
           const dir = f.direction==='up'?'▲':'▼';
           return `<div class="shap-item">
             <div class="shap-lbl">${f.label||f.feature}</div>
@@ -787,7 +794,7 @@ async function submitDecision(action) {
       claim_id: currentReviewClaimId, action, comments, shap_viewed: true
     });
     const labels = {approved:'Claim approved ✓', rejected:'Claim rejected', escalated:'Claim escalated to senior officer'};
-    const colors = {approved:'#1D9E75', rejected:'#993C1D', escalated:'#854F0B'};
+    const colors = {approved:'#189B86', rejected:'#993C1D', escalated:'#854F0B'};
     toast(labels[action], colors[action]);
     document.getElementById('tab-review').style.display='none';
     document.querySelector('[data-screen="queue"]').click();
@@ -821,7 +828,7 @@ async function loadProviders() {
     tableEl.style.display='table';
     document.getElementById('prov-tbody').innerHTML = (rows||[]).map(p => {
       const pc = p.status==='active'?'pp-active':'pp-susp';
-      const riskCol = p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#1D9E75';
+      const riskCol = p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#189B86';
       const flags = flagsById[p.provider_id] || 0;
       const pct = Math.round(flags/10*100);
       const actions = p.status==='active'
@@ -878,7 +885,7 @@ async function addProvider() {
   if (!payload.name||!payload.accreditation_no) { toast('Name and accreditation no. required','#993C1D'); return; }
   try {
     await api('POST','/admin/providers',payload);
-    toast('Provider added successfully','#1D9E75');
+    toast('Provider added successfully','#189B86');
     toggleAddForm();
     document.getElementById('new-name').value='';
     document.getElementById('new-accno').value='';
@@ -909,7 +916,7 @@ async function confirmReinstate() {
   if (!reinstateTarget) return;
   try {
     await api('POST','/suspension/reinstate',{provider_id: reinstateTarget.id, reason});
-    toast(`${reinstateTarget.name} reinstated — risk tier remains HIGH`,'#1D9E75');
+    toast(`${reinstateTarget.name} reinstated — risk tier remains HIGH`,'#189B86');
     closeReinstateModal();
     document.getElementById('sus-banner').classList.remove('visible');
     loadProviders();
@@ -929,7 +936,7 @@ async function loadAtRisk() {
     if (!rows||rows.length===0) { el.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:16px">No providers at risk</div>'; return; }
     el.innerHTML = rows.map(p => {
       const pct=Math.round(p.flags/10*100);
-      const col=p.flags>=10?'#D85A30':p.flags>=7?'#BA7517':'#1D9E75';
+      const col=p.flags>=10?'#D85A30':p.flags>=7?'#BA7517':'#189B86';
       return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0">
         <div style="flex:1;font-size:12px;font-weight:500">${p.name} <span style="color:#aaa;font-size:11px">· ${p.county}</span></div>
         <div style="width:80px;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden">
@@ -948,7 +955,7 @@ async function loadBarChart() {
     if (!rows||rows.length===0) { el.innerHTML='<div style="font-size:12px;color:#aaa">No data</div>'; return; }
     // Simple mock chart — real flag counts come from at-risk endpoint
     el.innerHTML = rows.slice(0,5).map(p => {
-      const col=p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#1D9E75';
+      const col=p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#189B86';
       const w=p.risk_tier==='high'?90:p.risk_tier==='medium'?50:20;
       return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="width:120px;font-size:12px;color:#444;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
@@ -966,7 +973,7 @@ async function downloadReport(type) {
   const start = document.getElementById('rpt-start').value;
   const end   = document.getElementById('rpt-end').value;
   if (!start||!end) { toast('Select a date range first','#993C1D'); return; }
-  toast('Generating report...','#185FA5');
+  toast('Generating report...','#1B3B6F');
   try {
     let path, filename;
     if (type==='pdf') { path=`/reports/verification-summary.pdf?start_date=${start}&end_date=${end}`; filename=`verification_summary_${start}.pdf`; }
@@ -978,7 +985,7 @@ async function downloadReport(type) {
     const a    = document.createElement('a');
     a.href=url; a.download=filename; a.click();
     URL.revokeObjectURL(url);
-    toast('Report downloaded ✓','#1D9E75');
+    toast('Report downloaded ✓','#189B86');
   } catch(e) { toast('Report failed: '+e.message,'#993C1D'); }
 }
 

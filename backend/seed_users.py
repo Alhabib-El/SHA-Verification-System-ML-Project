@@ -28,8 +28,8 @@ USERS = [
     {"user_id":"USR-001","full_name":"James Mwangi",
      "email":"j.mwangi@sha.go.ke","password_hash":hash_pw("Officer@2025"),
      "role":"officer","provider_id":None,"is_active":True},
-    {"user_id":"USR-002","full_name":"Sarah Otieno",
-     "email":"s.otieno@sha.go.ke","password_hash":hash_pw("Admin@2025"),
+    {"user_id":"USR-002","full_name":"Al-Habib",
+     "email":"sichemo@mylife.mku.ac.ke","password_hash":hash_pw("Admin@2026"),
      "role":"admin","provider_id":None,"is_active":True},
     {"user_id":"USR-003","full_name":"Peter Kiprop",
      "email":"p.kiprop@sha.go.ke","password_hash":hash_pw("Finance@2025"),
@@ -57,6 +57,6 @@ with engine.connect() as conn:
 
 print("\n✓ Done. Login credentials:")
 print("  Officer  : j.mwangi@sha.go.ke     / Officer@2025")
-print("  Admin    : s.otieno@sha.go.ke     / Admin@2025")
+print("  Admin    : sichemo@mylife.mku.ac.ke / Admin@2026")
 print("  Finance  : p.kiprop@sha.go.ke     / Finance@2025")
 print("  Provider : portal@kenyattanh.go.ke / Provider@2025")
