@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHA Claims Verification System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;color:#1a1a2e;display:flex;flex-direction:column;min-height:100vh}
+/* Login */
+.login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;border-radius:12px;padding:32px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.10)}
+.login-logo{text-align:center;margin-bottom:20px}
+.login-logo .dot{width:12px;height:12px;background:#1D9E75;border-radius:50%;display:inline-block;margin-right:6px}
+.login-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.login-sub{font-size:12px;color:#888;margin-bottom:24px;text-align:center}
+.login-error{background:#FAECE7;color:#993C1D;border-radius:7px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
+/* App */
+.app-wrap{display:none;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:#1D9E75}
+.user-info{display:flex;align-items:center;gap:12px;font-size:12px;color:#666}
+.nav-tabs-custom{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 12px;display:flex;overflow-x:auto}
+.nav-tab{padding:10px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:#666;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.nav-tab.active{color:#1D9E75;border-bottom-color:#1D9E75;font-weight:500}
+.nav-tab:hover:not(.active){color:#1a1a2e;background:#f8f8f8}
+.badge-count{background:#FAECE7;color:#993C1D;border-radius:10px;padding:1px 7px;font-size:10px}
+.main-content{flex:1;padding:20px;max-width:980px;margin:0 auto;width:100%}
+.screen{display:none}.screen.active{display:block}
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-title{font-size:13px;font-weight:600;margin-bottom:14px;color:#1a1a2e;display:flex;align-items:center;gap:6px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+input,select,textarea{width:100%;padding:8px 11px;border:1px solid #ddd;border-radius:7px;font-size:13px;background:#fff;color:#1a1a2e;font-family:inherit;outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+textarea{min-height:70px;resize:vertical}
+.hint{font-size:11px;color:#888;margin-top:3px}
+.ratio-warn{font-size:11px;color:#993C1D;font-weight:600;margin-top:3px}
+.btn{padding:8px 16px;border-radius:7px;font-size:13px;cursor:pointer;border:1px solid #ddd;background:#fff;color:#1a1a2e;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn:hover{background:#f4f4f4}
+.btn-primary{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btn-primary:hover{background:#0F6E56}
+.btn-danger{background:#D85A30;color:#fff;border-color:#D85A30}
+.btn-warn{background:#BA7517;color:#fff;border-color:#BA7517}
+.btn-info{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.metric{background:#f8f9fb;border-radius:8px;padding:12px 14px}
+.metric-label{font-size:11px;color:#888;margin-bottom:4px}
+.metric-val{font-size:22px;font-weight:600}
+.metric-val.green{color:#0F6E56}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
+table.dt{width:100%;border-collapse:collapse;font-size:12px}
+table.dt th{text-align:left;padding:7px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase}
+table.dt td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+table.dt tr:hover td{background:#fafafa}
+.score-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.sc-high{background:#FAECE7;color:#993C1D}.sc-med{background:#FAEEDA;color:#854F0B}.sc-ok{background:#E1F5EE;color:#0F6E56}
+.st-pill{font-size:11px;padding:3px 9px;border-radius:20px}
+.st-flag{background:#FAECE7;color:#993C1D}.st-app{background:#E1F5EE;color:#0F6E56}.st-pend{background:#EEF2FF;color:#3730A3}
+.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.section-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.detail-row{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px}
+.detail-row .lbl{color:#888}
+.shap-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0}
+.shap-item:last-child{border:none}
+.shap-lbl{flex:1;font-size:12px}
+.shap-bar-bg{width:90px;height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.shap-bar{height:100%;border-radius:4px}
+.shap-val{font-size:11px;font-weight:600;min-width:38px;text-align:right}
+.shap-val.up{color:#993C1D}.shap-val.dn{color:#0F6E56}
+.check-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0}
+.ck-ok{color:#0F6E56}.ck-fail{color:#993C1D}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.search-row{display:flex;gap:8px;margin-bottom:12px;align-items:center}
+.search-row input{flex:1}
+.search-row select{width:auto;min-width:120px}
+.act-btn{background:none;border:none;cursor:pointer;font-size:12px;font-family:inherit;padding:0 6px}
+.act-edit{color:#0F6E56}.act-del{color:#993C1D}
+.prov-pill{font-size:11px;padding:2px 8px;border-radius:20px}
+.pp-active{background:#E1F5EE;color:#0F6E56}.pp-susp{background:#FAECE7;color:#993C1D}
+.flag-progress{display:flex;align-items:center;gap:6px}
+.flag-bar-bg{width:60px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.flag-bar{height:100%;border-radius:3px}
+.risk-badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+.risk-high{background:#FAECE7;color:#993C1D}.risk-med{background:#FAEEDA;color:#854F0B}.risk-low{background:#E1F5EE;color:#0F6E56}
+.upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;color:#888;font-size:12px;cursor:pointer}
+.upload-zone:hover{border-color:#1D9E75;color:#0F6E56}
+.add-form{background:#f8f9fb;border-radius:8px;padding:14px;margin-top:12px;display:none}
+.suspension-banner{background:#FAECE7;border:1px solid #F0997B;border-left:4px solid #D85A30;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:none}
+.suspension-banner.visible{display:flex;align-items:flex-start;gap:12px}
+.report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.report-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.report-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.rc-pdf{background:#FAECE7;color:#D85A30}.rc-audit{background:#E6F1FB;color:#185FA5}.rc-csv{background:#E1F5EE;color:#0F6E56}
+.dl-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:none;font-family:inherit;font-weight:500}
+.dl-pdf{background:#FAECE7;color:#D85A30}.dl-pdf:hover{background:#D85A30;color:#fff}
+.dl-audit{background:#E6F1FB;color:#185FA5}.dl-audit:hover{background:#185FA5;color:#fff}
+.dl-csv{background:#E1F5EE;color:#0F6E56}.dl-csv:hover{background:#1D9E75;color:#fff}
+.loading{text-align:center;padding:30px;color:#aaa;font-size:13px}
+.error-msg{background:#FAECE7;color:#993C1D;border-radius:7px;padding:10px 14px;font-size:12px;margin-bottom:10px;display:none}
+.toast-box{position:fixed;bottom:80px;right:20px;padding:11px 18px;border-radius:8px;font-size:13px;color:#fff;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.site-footer{background:#fff;border-top:1px solid #e0e0e0;padding:14px 20px;margin-top:auto}
+.footer-inner{max-width:980px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.footer-logos{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}
+.footer-logo-item img{height:38px;width:auto;object-fit:contain}
+.footer-divider{width:1px;height:38px;background:#e0e0e0}
+.footer-text{font-size:10px;color:#aaa;text-align:center;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══════════════════════════════════════════════════════════ -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="dot"></span>
+      <span style="font-size:16px;font-weight:600">SHA Claims Verification</span>
+    </div>
+    <p class="login-sub">Sign in to access the verification system</p>
+    <div class="login-error" id="login-error"></div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Email address</label>
+      <input type="email" id="login-email" placeholder="e.g. j.mwangi@sha.go.ke"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group" style="margin-bottom:18px">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="doLogin()" id="login-btn">
+      <i class="ti ti-login"></i>Sign in
+    </button>
+    <div style="margin-top:16px;padding:10px;background:#f8f9fb;border-radius:7px;font-size:11px;color:#888">
+      <strong>Test accounts:</strong><br>
+      Officer: j.mwangi@sha.go.ke / Officer@2025<br>
+      Admin: s.otieno@sha.go.ke / Admin@2025<br>
+      Provider: portal@kenyattanh.go.ke / Provider@2025
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP (shown after login) ══════════════════════════════════════════════ -->
+<div class="app-wrap" id="app-wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>SHA Claims Verification System</div>
+    <div class="user-info">
+      <span id="topbar-user"></span>
+      <span id="topbar-role" style="background:#E1F5EE;color:#0F6E56;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase"></span>
+      <button class="btn" onclick="doLogout()" style="padding:4px 10px;font-size:11px">
+        <i class="ti ti-logout"></i>Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="nav-tabs-custom" id="nav-tabs">
+    <button class="nav-tab active" data-screen="submit" onclick="showScreen('submit',this)"><i class="ti ti-file-plus"></i>Submit Claim</button>
+    <button class="nav-tab" data-screen="queue" onclick="showScreen('queue',this)"><i class="ti ti-list-check"></i>Officer Queue</button>
+    <button class="nav-tab" data-screen="review" onclick="showScreen('review',this)" id="tab-review" style="display:none"><i class="ti ti-eye"></i>Claim Review</button>
+    <button class="nav-tab" data-screen="admin" onclick="showScreen('admin',this)"><i class="ti ti-settings"></i>Admin / CRUD</button>
+    <button class="nav-tab" data-screen="reports" onclick="showScreen('reports',this)"><i class="ti ti-chart-bar"></i>Reports</button>
+  </div>
+
+  <div class="main-content">
+
+    <!-- SCREEN 1: SUBMIT CLAIM -->
+    <div class="screen active" id="screen-submit">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-file-plus"></i>Submit new insurance claim</div>
+        <div class="error-msg" id="submit-error"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>SHA member no.</label>
+            <input type="text" id="sha-member-no" placeholder="e.g. SHA-2024-00123">
+          </div>
+          <div class="form-group">
+            <label>Provider ID</label>
+            <input type="text" id="submit-provider-id" placeholder="e.g. PRV-001">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Service date</label>
+            <input type="date" id="service-date">
+          </div>
+          <div class="form-group">
+            <label>Diagnosis code (ICD-10)</label>
+            <select id="diag-code" onchange="loadTariff()">
+              <option value="">— select —</option>
+              <option value="J18.0">J18.0 — Pneumonia</option>
+              <option value="A09">A09 — Diarrhoea</option>
+              <option value="K35">K35 — Appendicitis</option>
+              <option value="O80">O80 — Normal delivery</option>
+              <option value="E11">E11 — Type 2 diabetes</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Procedure code</label>
+            <select id="proc-code" onchange="loadTariff()">
+              <option value="">— select —</option>
+              <option value="99232">99232 — Subsequent hospital care</option>
+              <option value="99233">99233 — Complex hospital care</option>
+              <option value="44950">44950 — Appendectomy</option>
+              <option value="59400">59400 — Obstetric care</option>
+              <option value="83036">83036 — HbA1c test</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>SHA tariff (auto-populated from API)</label>
+            <input type="text" id="tariff-display" readonly placeholder="Select codes above" style="background:#f8f9fb">
+            <div class="hint" id="tariff-hint"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Claimed amount (KES)</label>
+            <input type="number" id="claimed-amount" placeholder="0.00" oninput="computeRatio()">
+            <div id="ratio-display"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="resetSubmit()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitClaim()"><i class="ti ti-send"></i>Submit claim</button>
+        </div>
+        <div id="submit-result" style="margin-top:12px;display:none"></div>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: OFFICER QUEUE -->
+    <div class="screen" id="screen-queue">
+      <div class="suspension-banner" id="sus-banner">
+        <i class="ti ti-shield-off" style="font-size:20px;color:#D85A30;flex-shrink:0"></i>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:#993C1D;margin-bottom:2px">Provider Auto-Suspended</div>
+          <div id="sus-banner-msg" style="font-size:12px;color:#7A3020"></div>
+        </div>
+        <button onclick="document.getElementById('sus-banner').classList.remove('visible')"
+                style="background:none;border:none;cursor:pointer;color:#993C1D;font-size:18px">×</button>
+      </div>
+      <div class="metrics" id="queue-metrics">
+        <div class="metric"><div class="metric-label">Today's claims</div><div class="metric-val" id="m-total">—</div></div>
+        <div class="metric"><div class="metric-label">Approved</div><div class="metric-val green" id="m-approved">—</div></div>
+        <div class="metric"><div class="metric-label">Flagged</div><div class="metric-val red" id="m-flagged">—</div></div>
+        <div class="metric"><div class="metric-label">Rejected</div><div class="metric-val amber" id="m-rejected">—</div></div>
+      </div>
+      <div class="card">
+        <div class="section-head">
+          <div class="card-title" style="margin:0"><i class="ti ti-alert-triangle"></i>Flagged claims awaiting review</div>
+          <button class="btn" onclick="loadQueue()" style="font-size:12px"><i class="ti ti-refresh"></i>Refresh</button>
+        </div>
+        <div class="error-msg" id="queue-error"></div>
+        <div id="queue-loading" class="loading"><i class="ti ti-loader"></i> Loading flagged claims...</div>
+        <table class="dt" id="queue-table" style="display:none">
+          <thead><tr><th>Claim ID</th><th>Provider</th><th>County</th><th>Amount (KES)</th><th>XGBoost Score</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="queue-tbody"></tbody>
+        </table>
+        <div id="queue-empty" style="display:none;text-align:center;padding:30px;color:#aaa;font-size:13px">
+          <i class="ti ti-circle-check" style="font-size:24px;display:block;margin-bottom:8px;color:#1D9E75"></i>
+          No flagged claims awaiting review
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: CLAIM REVIEW -->
+    <div class="screen" id="screen-review">
+      <div class="card" id="review-content">
+        <div class="loading"><i class="ti ti-loader"></i> Loading claim details...</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: ADMIN / CRUD -->
+    <div class="screen" id="screen-admin">
+      <div class="card">
+        <div class="section-head">
+          <div class="card-title" style="margin:0"><i class="ti ti-building-hospital"></i>Healthcare providers</div>
+          <button class="btn btn-primary" onclick="toggleAddForm()" style="font-size:12px"><i class="ti ti-plus"></i>Add provider</button>
+        </div>
+        <div class="search-row">
+          <input type="text" id="prov-search" placeholder="Search by name or ID…" oninput="loadProviders()">
+          <select id="county-filter" onchange="loadProviders()">
+            <option value="">All counties</option>
+            <option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option>
+          </select>
+          <select id="status-filter" onchange="loadProviders()">
+            <option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option>
+          </select>
+          <button class="btn" onclick="loadProviders()" style="font-size:12px"><i class="ti ti-refresh"></i></button>
+        </div>
+        <div class="error-msg" id="admin-error"></div>
+        <div id="admin-loading" class="loading"><i class="ti ti-loader"></i> Loading providers...</div>
+        <table class="dt" id="admin-table" style="display:none">
+          <thead><tr><th>Provider ID</th><th>Name</th><th>County</th><th>Type</th><th>Flag count (30d)</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="prov-tbody"></tbody>
+        </table>
+        <div class="add-form" id="add-form">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px"><i class="ti ti-plus"></i> Add new provider</div>
+          <div class="form-row">
+            <div class="form-group"><label>Provider name</label><input type="text" id="new-name"></div>
+            <div class="form-group"><label>County</label>
+              <select id="new-county"><option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Facility type</label>
+              <select id="new-ftype"><option>Hospital</option><option>Clinic</option><option>Pharmacy</option><option>Laboratory</option></select>
+            </div>
+            <div class="form-group"><label>Facility tier</label>
+              <select id="new-ftier"><option value="Level 2">Level 2</option><option value="Level 3">Level 3</option><option value="Level 4">Level 4</option><option value="Level 5">Level 5</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Accreditation no.</label><input type="text" id="new-accno"></div>
+            <div class="form-group"><label>Regulatory body</label>
+              <select id="new-regbody"><option>KMPDC</option><option>NCK</option><option>PPB</option></select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="toggleAddForm()">Cancel</button>
+            <button class="btn btn-primary" onclick="addProvider()">Save provider →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 5: REPORTS -->
+    <div class="screen" id="screen-reports">
+      <div class="report-grid">
+        <div class="report-card">
+          <div class="report-card-icon rc-pdf"><i class="ti ti-file-type-pdf"></i></div>
+          <div style="font-size:13px;font-weight:600">Verification Summary</div>
+          <div style="font-size:12px;color:#888;flex:1">Daily claims summary and provider performance PDF for management review.</div>
+          <button class="dl-btn dl-pdf" onclick="downloadReport('pdf')"><i class="ti ti-download"></i>Generate PDF</button>
+        </div>
+        <div class="report-card">
+          <div class="report-card-icon rc-audit"><i class="ti ti-shield-check"></i></div>
+          <div style="font-size:13px;font-weight:600">Audit Trail Export</div>
+          <div style="font-size:12px;color:#888;flex:1">Complete officer decision log including auto-suspension events (FR-09).</div>
+          <button class="dl-btn dl-audit" onclick="downloadReport('audit')"><i class="ti ti-download"></i>Export CSV</button>
+        </div>
+        <div class="report-card">
+          <div class="report-card-icon rc-csv"><i class="ti ti-flag"></i></div>
+          <div style="font-size:13px;font-weight:600">Flagged Claims Export</div>
+          <div style="font-size:12px;color:#888;flex:1">All flagged claims with XGBoost scores and top SHAP features.</div>
+          <button class="dl-btn dl-csv" onclick="downloadReport('flagged')"><i class="ti ti-download"></i>Export CSV</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-calendar-stats"></i>Date range for report</div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div class="form-group"><label>Start date</label><input type="date" id="rpt-start"></div>
+          <div class="form-group"><label>End date</label><input type="date" id="rpt-end"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-bar"></i>Provider flag rate — top 5</div>
+          <div id="bar-chart"><div class="loading">Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:#993C1D"><i class="ti ti-shield-off"></i>At-risk providers</div>
+          <div style="font-size:11px;color:#888;margin-bottom:10px">Providers with 4+ flags in last 30 days</div>
+          <div id="at-risk-list"><div class="loading">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.main-content -->
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div style="font-size:11px;color:#888">In collaboration with</div>
+      <div class="footer-logos">
+        <div class="footer-logo-item"><img src="data:image/png;base64,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" alt="SHA"></div>
+        <div class="footer-divider"></div>
+        <div class="footer-logo-item"><img src="data:image/jpeg;base64,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" alt="Mount Kenya University"></div>
+        <div class="footer-divider"></div>
+        <div class="footer-logo-item"><img src="data:image/png;base64,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" alt="Ministry of Health"></div>
+      </div>
+      <div class="footer-text">SHA Claims Verification System &nbsp;|&nbsp; BIT/2019/42945 — Elvis Paul Sichemo<br>Mount Kenya University &nbsp;·&nbsp; School of Computing and Informatics &nbsp;·&nbsp; 2025–2026</div>
+    </div>
+  </footer>
+
+</div><!-- /.app-wrap -->
+
+<div class="toast-box" id="toast"></div>
+
+<script>
+// ══ CONFIG ════════════════════════════════════════════════════════════════════
+const API = 'http://localhost:8000';
+
+// ══ STATE ═════════════════════════════════════════════════════════════════════
+let authToken  = localStorage.getItem('sha_token')  || null;
+let userRole   = localStorage.getItem('sha_role')   || null;
+let userName   = localStorage.getItem('sha_name')   || null;
+let currentReviewClaimId = null;
+
+// ══ API HELPER ════════════════════════════════════════════════════════════════
+async function api(method, path, body=null) {
+  const headers = {'Content-Type':'application/json'};
+  if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+  const opts = {method, headers};
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  if (res.status === 401) { doLogout(); return null; }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({detail: 'Request failed'}));
+    throw new Error(err.detail || 'Request failed');
+  }
+  if (res.headers.get('content-type')?.includes('application/json')) return res.json();
+  return res;   // for binary (PDF) responses
+}
+
+// ══ AUTH ══════════════════════════════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+  errEl.style.display = 'none';
+  btn.innerHTML = '<i class="ti ti-loader"></i>Signing in...';
+  btn.disabled  = true;
+  try {
+    const data = await api('POST', '/auth/login', {email, password: pass});
+    authToken = data.access_token;
+    userRole  = data.role;
+    userName  = data.full_name;
+    localStorage.setItem('sha_token', authToken);
+    localStorage.setItem('sha_role',  userRole);
+    localStorage.setItem('sha_name',  userName);
+    showApp();
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+  btn.innerHTML = '<i class="ti ti-login"></i>Sign in';
+  btn.disabled  = false;
+}
+
+function doLogout() {
+  authToken = userRole = userName = null;
+  localStorage.clear();
+  document.getElementById('app-wrap').style.display  = 'none';
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('login-wrap').style.flexDirection = 'column';
+}
+
+function showApp() {
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('app-wrap').style.display   = 'flex';
+  document.getElementById('app-wrap').style.flexDirection = 'column';
+  document.getElementById('topbar-user').textContent  = userName || '';
+  document.getElementById('topbar-role').textContent  = userRole || '';
+  // Show/hide tabs by role
+  const isProvider = userRole === 'provider';
+  document.querySelector('[data-screen="queue"]').style.display  = isProvider ? 'none' : '';
+  document.querySelector('[data-screen="admin"]').style.display  = userRole === 'admin' ? '' : 'none';
+  document.querySelector('[data-screen="reports"]').style.display= (userRole==='admin'||userRole==='officer') ? '' : 'none';
+  // Set default date range for reports
+  const today = new Date().toISOString().split('T')[0];
+  const monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+  document.getElementById('rpt-start').value = monthAgo;
+  document.getElementById('rpt-end').value   = today;
+  // Load first active screen
+  const firstActive = document.querySelector('.nav-tab:not([style*="none"])');
+  if (firstActive) firstActive.click();
+}
+
+// ══ NAVIGATION ════════════════════════════════════════════════════════════════
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if (name === 'queue')   { loadMetrics(); loadQueue(); }
+  if (name === 'admin')   loadProviders();
+  if (name === 'reports') loadReportsData();
+}
+
+// ══ SCREEN 1: SUBMIT CLAIM ════════════════════════════════════════════════════
+let currentTariff = null;
+async function loadTariff() {
+  const d = document.getElementById('diag-code').value;
+  const p = document.getElementById('proc-code').value;
+  if (!d || !p) return;
+  try {
+    const data = await api('GET', `/claims/tariff-lookup?diagnosis_code=${d}&procedure_code=${p}`);
+    if (data) {
+      currentTariff = data.approved_amount;
+      document.getElementById('tariff-display').value = 'KES ' + data.approved_amount.toLocaleString();
+      document.getElementById('tariff-hint').textContent = 'SHA approved tariff retrieved from database';
+      computeRatio();
+    }
+  } catch(e) {
+    document.getElementById('tariff-display').value = '';
+    document.getElementById('tariff-hint').textContent = 'No tariff found for this combination';
+    currentTariff = null;
+  }
+}
+
+function computeRatio() {
+  const amt = parseFloat(document.getElementById('claimed-amount').value) || 0;
+  const el  = document.getElementById('ratio-display');
+  if (!currentTariff || !amt) { el.innerHTML=''; return; }
+  const r = amt / currentTariff;
+  el.innerHTML = r > 2
+    ? `<div class="ratio-warn">⚠ Ratio: ${r.toFixed(2)}x — billing anomaly likely to be flagged</div>`
+    : r > 1.2
+    ? `<div class="hint" style="color:#854F0B">Ratio: ${r.toFixed(2)}x — slightly above tariff</div>`
+    : `<div class="hint">Ratio: ${r.toFixed(2)}x — within expected range ✓</div>`;
+}
+
+async function submitClaim() {
+  const errEl = document.getElementById('submit-error');
+  errEl.style.display = 'none';
+  const payload = {
+    sha_member_no:  document.getElementById('sha-member-no').value.trim(),
+    provider_id:    document.getElementById('submit-provider-id').value.trim(),
+    service_date:   document.getElementById('service-date').value,
+    diagnosis_code: document.getElementById('diag-code').value,
+    procedure_code: document.getElementById('proc-code').value,
+    claimed_amount: parseFloat(document.getElementById('claimed-amount').value),
+  };
+  // Map to schema field name
+  const body = {
+    patient_sha_member_no: payload.sha_member_no,
+    provider_id:           payload.provider_id,
+    service_date:          payload.service_date,
+    diagnosis_code:        payload.diagnosis_code,
+    procedure_code:        payload.procedure_code,
+    claimed_amount:        payload.claimed_amount,
+  };
+  if (!body.patient_sha_member_no || !body.provider_id || !body.service_date ||
+      !body.diagnosis_code || !body.procedure_code || !body.claimed_amount) {
+    errEl.textContent = 'Please fill in all required fields';
+    errEl.style.display = 'block'; return;
+  }
+  try {
+    toast('Submitting claim to API...', '#185FA5');
+    const data = await api('POST', '/claims/submit', body);
+    const resultEl = document.getElementById('submit-result');
+    const score = data.verification?.xgboost_score;
+    const flagged = data.verification?.is_flagged;
+    resultEl.style.display = 'block';
+    resultEl.innerHTML = `
+      <div style="background:${flagged?'#FAECE7':'#E1F5EE'};border-radius:8px;padding:14px;border-left:4px solid ${flagged?'#D85A30':'#1D9E75'}">
+        <div style="font-weight:600;color:${flagged?'#993C1D':'#0F6E56'};margin-bottom:6px">
+          <i class="ti ti-${flagged?'alert-triangle':'circle-check'}"></i>
+          Claim ${data.claim_id} — ${flagged?'FLAGGED FOR REVIEW':'VERIFIED'}
+        </div>
+        <div style="font-size:12px;color:#555;display:grid;grid-template-columns:auto 1fr;gap:4px 12px">
+          <span style="color:#888">Status</span><span>${data.status}</span>
+          ${score!=null?`<span style="color:#888">XGBoost score</span><span>${score.toFixed(3)}</span>`:''}
+          ${flagged?'<span style="color:#888">Next step</span><span>Claim routed to officer review queue</span>':'<span style="color:#888">Next step</span><span>Claim routed to approval queue</span>'}
+        </div>
+      </div>`;
+    toast('Claim submitted and verified ✓', '#1D9E75');
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function resetSubmit() {
+  ['sha-member-no','submit-provider-id','service-date','claimed-amount'].forEach(id => document.getElementById(id).value='');
+  ['diag-code','proc-code'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('tariff-display').value='';
+  ['tariff-hint','ratio-display'].forEach(id => document.getElementById(id).innerHTML='');
+  document.getElementById('submit-result').style.display='none';
+  document.getElementById('submit-error').style.display='none';
+  currentTariff = null;
+}
+
+// ══ SCREEN 2: OFFICER QUEUE ═══════════════════════════════════════════════════
+async function loadMetrics() {
+  try {
+    const data = await api('GET', '/reports/dashboard-summary');
+    if (!data) return;
+    document.getElementById('m-total').textContent    = data.total_claims    ?? 0;
+    document.getElementById('m-approved').textContent = data.approved_count  ?? 0;
+    document.getElementById('m-flagged').textContent  = data.flagged_count   ?? 0;
+    document.getElementById('m-rejected').textContent = data.rejected_count  ?? 0;
+  } catch(e) { /* silently fail — metrics are non-critical */ }
+}
+
+async function loadQueue() {
+  const loadEl = document.getElementById('queue-loading');
+  const tableEl = document.getElementById('queue-table');
+  const emptyEl = document.getElementById('queue-empty');
+  const errEl   = document.getElementById('queue-error');
+  loadEl.style.display='block'; tableEl.style.display='none'; emptyEl.style.display='none'; errEl.style.display='none';
+  try {
+    const rows = await api('GET', '/review/queue');
+    loadEl.style.display='none';
+    if (!rows || rows.length===0) { emptyEl.style.display='block'; return; }
+    tableEl.style.display='table';
+    const tbody = document.getElementById('queue-tbody');
+    tbody.innerHTML = rows.map(r => {
+      const sc = r.xgboost_score>=.70?'sc-high':r.xgboost_score>=.50?'sc-med':'sc-ok';
+      return `<tr>
+        <td style="font-family:monospace;font-size:11px">${r.claim_id}</td>
+        <td>${r.provider_name}</td><td>${r.county||'—'}</td>
+        <td>KES ${Number(r.claimed_amount).toLocaleString()}</td>
+        <td><span class="score-pill ${sc}">${Number(r.xgboost_score).toFixed(3)}</span></td>
+        <td><span class="st-pill st-flag">Flagged</span></td>
+        <td><button class="btn" onclick="openReview('${r.claim_id}')" style="font-size:11px;padding:4px 10px">
+          <i class="ti ti-eye"></i>Review</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    loadEl.style.display='none';
+    errEl.textContent = 'Failed to load queue: ' + e.message;
+    errEl.style.display='block';
+  }
+}
+
+// ══ SCREEN 3: CLAIM REVIEW ════════════════════════════════════════════════════
+async function openReview(claimId) {
+  currentReviewClaimId = claimId;
+  document.getElementById('tab-review').style.display='';
+  document.getElementById('tab-review').click();
+  const el = document.getElementById('review-content');
+  el.innerHTML = '<div class="loading"><i class="ti ti-loader"></i> Loading claim details...</div>';
+  try {
+    const d = await api('GET', `/review/${claimId}`);
+    const features = Array.isArray(d.top_features) ? d.top_features : [];
+    const shapHtml = features.length
+      ? features.map(f => {
+          const w = Math.round(Math.abs(f.value)/0.34*100);
+          const col = f.direction==='up'?'#D85A30':'#1D9E75';
+          const dir = f.direction==='up'?'▲':'▼';
+          return `<div class="shap-item">
+            <div class="shap-lbl">${f.label||f.feature}</div>
+            <div class="shap-bar-bg"><div class="shap-bar" style="width:${w}%;background:${col}"></div></div>
+            <div class="shap-val ${f.direction}">${dir} ${Math.abs(f.value).toFixed(3)}</div>
+          </div>`;
+        }).join('')
+      : '<div style="font-size:12px;color:#aaa">No SHAP data available (model not trained yet)</div>';
+
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div>
+          <div style="font-size:14px;font-weight:600">${d.claim_id}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${d.provider_name} · ${d.county||''}</div>
+        </div>
+        ${d.xgboost_score!=null
+          ? `<span class="score-pill ${d.xgboost_score>=.70?'sc-high':d.xgboost_score>=.50?'sc-med':'sc-ok'}" style="font-size:13px;padding:5px 12px">
+               Score: ${d.xgboost_score.toFixed(3)} ${d.is_flagged?'● HIGH RISK':'● LOW RISK'}</span>`
+          : '<span class="score-pill sc-pend" style="font-size:13px;padding:5px 12px">Pipeline not yet active</span>'}
+      </div>
+      <div class="review-grid">
+        <div>
+          <div class="section-label">Claim details</div>
+          <div class="detail-row">
+            <span class="lbl">Patient</span><span>${d.patient_name}</span>
+            <span class="lbl">Provider</span><span>${d.provider_name}</span>
+            <span class="lbl">Diagnosis</span><span>${d.diagnosis_code}</span>
+            <span class="lbl">Procedure</span><span>${d.procedure_code}</span>
+            <span class="lbl">SHA tariff</span><span>KES ${d.sha_tariff_amount?Number(d.sha_tariff_amount).toLocaleString():'N/A'}</span>
+            <span class="lbl">Claimed</span><span style="color:${d.amount_ratio>2?'#993C1D':'inherit'};font-weight:${d.amount_ratio>2?'600':'400'}">KES ${Number(d.claimed_amount).toLocaleString()}</span>
+            <span class="lbl">Ratio</span><span style="color:${d.amount_ratio>2?'#993C1D':'inherit'};font-weight:600">${d.amount_ratio?Number(d.amount_ratio).toFixed(2)+'x':'N/A'} ${d.amount_ratio>2?'⚠':''}</span>
+          </div>
+          <div style="margin-top:14px">
+            <div class="section-label">Pre-check results</div>
+            <div class="check-row ${d.eligibility_check?'ck-ok':'ck-fail'}">
+              <i class="ti ti-${d.eligibility_check?'circle-check':'circle-x'}"></i> Eligibility: ${d.eligibility_check?'passed':'FAILED'}
+            </div>
+            <div class="check-row ${d.provider_check?'ck-ok':'ck-fail'}">
+              <i class="ti ti-${d.provider_check?'circle-check':'circle-x'}"></i> Provider: ${d.provider_check?'passed':'FAILED'}
+            </div>
+            <div class="check-row ${d.clinical_match?'ck-ok':'ck-fail'}">
+              <i class="ti ti-${d.clinical_match?'circle-check':'circle-x'}"></i> Clinical match: ${d.clinical_match?'passed':'FAILED'}
+            </div>
+            <div class="check-row ${d.billing_compliant?'ck-ok':'ck-fail'}">
+              <i class="ti ti-${d.billing_compliant?'circle-check':'circle-x'}"></i> Billing compliance: ${d.billing_compliant?'passed':'FAILED'}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="section-label">Why was this flagged? (SHAP)</div>
+          ${shapHtml}
+        </div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0">
+        <label style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px">
+          Officer comments (required)
+        </label>
+        <textarea id="officer-comment" placeholder="Enter your review comments before submitting a decision…" style="margin-top:6px"></textarea>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-warn" onclick="submitDecision('escalated')"><i class="ti ti-arrow-up"></i>Escalate</button>
+          <button class="btn btn-danger" onclick="submitDecision('rejected')"><i class="ti ti-x"></i>Reject</button>
+          <button class="btn btn-primary" onclick="submitDecision('approved')"><i class="ti ti-check"></i>Approve</button>
+        </div>
+      </div>
+      <p style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">
+        <i class="ti ti-info-circle"></i> Decision and SHAP-viewed status recorded in the audit log
+      </p>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:#993C1D;padding:20px">Failed to load claim: ${e.message}</div>`;
+  }
+}
+
+async function submitDecision(action) {
+  const comments = (document.getElementById('officer-comment')?.value||'').trim();
+  if (!comments || comments.length < 5) { toast('Please enter review comments (min 5 chars)', '#993C1D'); return; }
+  try {
+    await api('POST', '/review/decide', {
+      claim_id: currentReviewClaimId, action, comments, shap_viewed: true
+    });
+    const labels = {approved:'Claim approved ✓', rejected:'Claim rejected', escalated:'Claim escalated to senior officer'};
+    const colors = {approved:'#1D9E75', rejected:'#993C1D', escalated:'#854F0B'};
+    toast(labels[action], colors[action]);
+    document.getElementById('tab-review').style.display='none';
+    document.querySelector('[data-screen="queue"]').click();
+  } catch(e) { toast('Failed: ' + e.message, '#993C1D'); }
+}
+
+// ══ SCREEN 4: ADMIN CRUD ══════════════════════════════════════════════════════
+async function loadProviders() {
+  const loadEl  = document.getElementById('admin-loading');
+  const tableEl = document.getElementById('admin-table');
+  const errEl   = document.getElementById('admin-error');
+  loadEl.style.display='block'; tableEl.style.display='none'; errEl.style.display='none';
+  const search  = document.getElementById('prov-search').value;
+  const county  = document.getElementById('county-filter').value;
+  const status  = document.getElementById('status-filter').value;
+  let path = '/admin/providers?';
+  if (search) path += `search=${encodeURIComponent(search)}&`;
+  if (county) path += `county=${encodeURIComponent(county)}&`;
+  if (status) path += `status=${encodeURIComponent(status)}&`;
+  try {
+    const rows = await api('GET', path);
+    loadEl.style.display='none';
+    tableEl.style.display='table';
+    document.getElementById('prov-tbody').innerHTML = (rows||[]).map(p => {
+      const pc = p.status==='active'?'pp-active':'pp-susp';
+      const riskCol = p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#1D9E75';
+      const actions = p.status==='active'
+        ? `<button class="act-btn act-del" onclick="suspendProvider('${p.provider_id}','${p.name}')"><i class="ti ti-shield-off"></i>Suspend</button>
+           <button class="act-btn act-del" onclick="deleteProvider('${p.provider_id}')" style="margin-left:4px"><i class="ti ti-trash"></i></button>`
+        : `<button class="act-btn act-edit" onclick="openReinstate('${p.provider_id}','${p.name}')"><i class="ti ti-shield-check"></i>Reinstate</button>`;
+      return `<tr>
+        <td style="font-family:monospace;font-size:11px">${p.provider_id}</td>
+        <td>${p.name}</td><td>${p.county}</td><td>${p.facility_type}</td>
+        <td>
+          <div class="flag-progress">
+            <div class="flag-bar-bg"><div class="flag-bar" style="width:0%;background:${riskCol}"></div></div>
+            <span class="risk-badge risk-${p.risk_tier}" style="font-size:10px">${p.risk_tier.toUpperCase()}</span>
+          </div>
+        </td>
+        <td><span class="prov-pill ${pc}">${p.status}</span></td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No providers found</td></tr>';
+  } catch(e) {
+    loadEl.style.display='none';
+    errEl.textContent='Failed to load providers: '+e.message;
+    errEl.style.display='block';
+  }
+}
+
+async function suspendProvider(id, name) {
+  if (!confirm(`Suspend ${name}?`)) return;
+  try {
+    await api('PATCH', `/admin/providers/${id}`, {status:'suspended',risk_tier:'high'});
+    toast(`${name} suspended`, '#D85A30');
+    loadProviders();
+  } catch(e) { toast('Failed: '+e.message,'#993C1D'); }
+}
+
+async function deleteProvider(id) {
+  if (!confirm('Delete this provider? This cannot be undone.')) return;
+  try {
+    await api('DELETE', `/admin/providers/${id}`);
+    toast('Provider deleted', '#993C1D');
+    loadProviders();
+  } catch(e) { toast('Failed: '+e.message,'#993C1D'); }
+}
+
+async function addProvider() {
+  const payload = {
+    name:            document.getElementById('new-name').value.trim(),
+    facility_type:   document.getElementById('new-ftype').value,
+    facility_tier:   document.getElementById('new-ftier').value,
+    county:          document.getElementById('new-county').value,
+    accreditation_no:document.getElementById('new-accno').value.trim(),
+    regulatory_body: document.getElementById('new-regbody').value,
+  };
+  if (!payload.name||!payload.accreditation_no) { toast('Name and accreditation no. required','#993C1D'); return; }
+  try {
+    await api('POST','/admin/providers',payload);
+    toast('Provider added successfully','#1D9E75');
+    toggleAddForm();
+    document.getElementById('new-name').value='';
+    document.getElementById('new-accno').value='';
+    loadProviders();
+  } catch(e) { toast('Failed: '+e.message,'#993C1D'); }
+}
+
+function toggleAddForm() {
+  const f=document.getElementById('add-form');
+  f.style.display=f.style.display==='block'?'none':'block';
+}
+
+async function openReinstate(id, name) {
+  const reason = prompt(`Reinstate ${name}\n\nProvide a documented reason (required):`);
+  if (!reason||reason.length<10) { if(reason!==null) toast('Reason too short (min 10 chars)','#993C1D'); return; }
+  try {
+    await api('POST','/suspension/reinstate',{provider_id:id, reason});
+    toast(`${name} reinstated — risk tier remains HIGH`,'#1D9E75');
+    loadProviders();
+  } catch(e) { toast('Failed: '+e.message,'#993C1D'); }
+}
+
+// ══ SCREEN 5: REPORTS ════════════════════════════════════════════════════════
+async function loadReportsData() {
+  loadAtRisk();
+  loadBarChart();
+}
+
+async function loadAtRisk() {
+  const el = document.getElementById('at-risk-list');
+  try {
+    const rows = await api('GET', '/suspension/at-risk');
+    if (!rows||rows.length===0) { el.innerHTML='<div style="font-size:12px;color:#aaa;text-align:center;padding:16px">No providers at risk</div>'; return; }
+    el.innerHTML = rows.map(p => {
+      const pct=Math.round(p.flags/10*100);
+      const col=p.flags>=10?'#D85A30':p.flags>=7?'#BA7517':'#1D9E75';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0">
+        <div style="flex:1;font-size:12px;font-weight:500">${p.name} <span style="color:#aaa;font-size:11px">· ${p.county}</span></div>
+        <div style="width:80px;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:4px"></div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:${col};min-width:36px;text-align:right">${p.flags}/10</div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML=`<div style="color:#993C1D;font-size:12px">${e.message}</div>`; }
+}
+
+async function loadBarChart() {
+  const el = document.getElementById('bar-chart');
+  try {
+    const rows = await api('GET', '/admin/providers?status=active');
+    if (!rows||rows.length===0) { el.innerHTML='<div style="font-size:12px;color:#aaa">No data</div>'; return; }
+    // Simple mock chart — real flag counts come from at-risk endpoint
+    el.innerHTML = rows.slice(0,5).map(p => {
+      const col=p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#1D9E75';
+      const w=p.risk_tier==='high'?90:p.risk_tier==='medium'?50:20;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="width:120px;font-size:12px;color:#444;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+        <div style="flex:1;background:#f0f0f0;border-radius:4px;height:20px;overflow:hidden">
+          <div style="width:${w}%;background:${col};height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px">
+            <span style="font-size:11px;color:#fff;font-weight:600">${p.risk_tier}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML=`<div style="color:#993C1D;font-size:12px">${e.message}</div>`; }
+}
+
+async function downloadReport(type) {
+  const start = document.getElementById('rpt-start').value;
+  const end   = document.getElementById('rpt-end').value;
+  if (!start||!end) { toast('Select a date range first','#993C1D'); return; }
+  toast('Generating report...','#185FA5');
+  try {
+    let path, filename;
+    if (type==='pdf') { path=`/reports/verification-summary.pdf?start_date=${start}&end_date=${end}`; filename=`verification_summary_${start}.pdf`; }
+    else if (type==='audit') { path=`/reports/audit-trail.csv?start_date=${start}&end_date=${end}`; filename='audit_trail.csv'; }
+    else { path=`/reports/flagged-claims.csv?start_date=${start}&end_date=${end}`; filename='flagged_claims.csv'; }
+    const res = await api('GET', path);
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href=url; a.download=filename; a.click();
+    URL.revokeObjectURL(url);
+    toast('Report downloaded ✓','#1D9E75');
+  } catch(e) { toast('Report failed: '+e.message,'#993C1D'); }
+}
+
+// ══ SHARED ════════════════════════════════════════════════════════════════════
+function toast(msg,bg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=bg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',3500);
+}
+
+// ══ INIT ══════════════════════════════════════════════════════════════════════
+if (authToken) { showApp(); }
+</script>
+</body>
+</html>

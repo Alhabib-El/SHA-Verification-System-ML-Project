@@ -95,7 +95,16 @@ def submit_claim(
 
     claim = db.execute(text("SELECT * FROM claims WHERE claim_id = :cid"),
                         {"cid": claim_id}).fetchone()
-    return dict(claim._mapping)
+    result = dict(claim._mapping)
+
+    verification = db.execute(text("""
+        SELECT xgboost_score, is_flagged FROM verification_results
+        WHERE claim_id = :cid
+    """), {"cid": claim_id}).fetchone()
+    if verification:
+        result["verification"] = dict(verification._mapping)
+
+    return result
 
 
 @router.get("/{claim_id}/status")
