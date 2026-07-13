@@ -91,8 +91,23 @@ table.dt tr:hover td{background:#fafafa}
 .upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;color:#888;font-size:12px;cursor:pointer}
 .upload-zone:hover{border-color:#1D9E75;color:#0F6E56}
 .add-form{background:#f8f9fb;border-radius:8px;padding:14px;margin-top:12px;display:none}
-.suspension-banner{background:#FAECE7;border:1px solid #F0997B;border-left:4px solid #D85A30;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:none}
+.suspension-banner{background:#FAECE7;border:1px solid #F0997B;border-left:4px solid #D85A30;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:none;animation:slideDown .3s ease}
 .suspension-banner.visible{display:flex;align-items:flex-start;gap:12px}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.sus-ban-icon{font-size:20px;color:#D85A30;flex-shrink:0;margin-top:1px}
+.sus-ban-body{flex:1}
+.sus-ban-title{font-size:13px;font-weight:600;color:#993C1D;margin-bottom:2px}
+.sus-ban-desc{font-size:12px;color:#7A3020;line-height:1.4}
+.sus-ban-close{background:none;border:none;cursor:pointer;color:#993C1D;font-size:16px;padding:0;margin-left:8px}
+.sus-toast{position:fixed;top:70px;right:20px;background:#D85A30;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;display:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:340px;line-height:1.4;animation:slideDown .3s ease}
+.sus-toast.visible{display:block}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.modal-subtitle{font-size:12px;color:#888;margin-bottom:16px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
 .report-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .report-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
@@ -113,6 +128,35 @@ table.dt tr:hover td{background:#fafafa}
 </style>
 </head>
 <body>
+
+<!-- SUSPENSION TOAST (fires when an at-risk provider is found to be suspended) -->
+<div class="sus-toast" id="sus-toast">
+  <div style="display:flex;align-items:flex-start;gap:8px">
+    <i class="ti ti-shield-off" style="font-size:18px;flex-shrink:0;margin-top:1px"></i>
+    <div>
+      <div style="font-weight:600;margin-bottom:3px">Provider Auto-Suspended</div>
+      <div id="sus-toast-msg" style="font-size:12px;opacity:.9"></div>
+    </div>
+    <button onclick="document.getElementById('sus-toast').classList.remove('visible')"
+            style="background:none;border:none;color:#fff;cursor:pointer;margin-left:4px;font-size:16px">×</button>
+  </div>
+</div>
+
+<!-- REINSTATE MODAL -->
+<div class="modal-overlay" id="reinstate-modal">
+  <div class="modal-box">
+    <div class="modal-title"><i class="ti ti-shield-check" style="color:#1D9E75"></i>Reinstate Provider</div>
+    <div class="modal-subtitle">Reinstating <strong id="reinstate-prov-name"></strong>. Risk tier remains HIGH after reinstatement.</div>
+    <div class="form-group">
+      <label>Documented reason (required)</label>
+      <textarea id="reinstate-reason" placeholder="e.g. Investigation completed — billing errors confirmed as administrative mistake. Provider has remediated process." style="min-height:80px"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeReinstateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmReinstate()"><i class="ti ti-shield-check"></i>Confirm Reinstatement</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ LOGIN SCREEN ══════════════════════════════════════════════════════════ -->
 <div class="login-wrap" id="login-wrap">
@@ -386,7 +430,7 @@ table.dt tr:hover td{background:#fafafa}
         <div class="footer-divider"></div>
         <div class="footer-logo-item"><img src="data:image/png;base64,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" alt="Ministry of Health"></div>
       </div>
-      <div class="footer-text">SHA Claims Verification System &nbsp;|&nbsp; BIT/2019/42945 — Elvis Paul Sichemo<br>Mount Kenya University &nbsp;·&nbsp; School of Computing and Informatics &nbsp;·&nbsp; 2025–2026</div>
+      <div class="footer-text">Design and Evaluation of a Machine Learning Pipeline for Health Insurance Claims Verification In Kenya's Social Health Authority.<br>BIT/2019/42945 — Elvis Paul Sichemo<br>Mount Kenya University &nbsp;·&nbsp; School of Computing and Informatics &nbsp;·&nbsp; 2025–2026</div>
     </div>
   </footer>
 
@@ -403,6 +447,7 @@ let authToken  = localStorage.getItem('sha_token')  || null;
 let userRole   = localStorage.getItem('sha_role')   || null;
 let userName   = localStorage.getItem('sha_name')   || null;
 let currentReviewClaimId = null;
+let reinstateTarget = null;
 
 // ══ API HELPER ════════════════════════════════════════════════════════════════
 async function api(method, path, body=null) {
@@ -592,7 +637,33 @@ async function loadMetrics() {
   } catch(e) { /* silently fail — metrics are non-critical */ }
 }
 
+// Checks /suspension/at-risk for any provider that has actually been
+// auto-suspended and surfaces the real event via banner + toast.
+async function checkSuspensions() {
+  try {
+    const rows = await api('GET', '/suspension/at-risk');
+    const suspended = (rows||[]).find(p => p.status === 'suspended');
+    const banner = document.getElementById('sus-banner');
+    if (!suspended) { banner.classList.remove('visible'); return; }
+    document.getElementById('sus-banner-msg').innerHTML =
+      `<strong>${suspended.name}</strong> has been automatically suspended after reaching
+      <strong>${suspended.flags} flagged claims</strong> within the last 30 days.
+      All pending claims from this provider have been placed on hold.`;
+    banner.classList.add('visible');
+    showSuspensionToast(suspended.name, suspended.flags);
+  } catch(e) { /* silently fail — banner is non-critical */ }
+}
+
+function showSuspensionToast(provName, flagCount) {
+  document.getElementById('sus-toast-msg').textContent =
+    `${provName} has been suspended — ${flagCount} flags reached in 30 days. Claims from this provider are on hold.`;
+  const t = document.getElementById('sus-toast');
+  t.classList.add('visible');
+  setTimeout(()=>t.classList.remove('visible'), 6000);
+}
+
 async function loadQueue() {
+  checkSuspensions();
   const loadEl = document.getElementById('queue-loading');
   const tableEl = document.getElementById('queue-table');
   const emptyEl = document.getElementById('queue-empty');
@@ -738,12 +809,22 @@ async function loadProviders() {
   if (county) path += `county=${encodeURIComponent(county)}&`;
   if (status) path += `status=${encodeURIComponent(status)}&`;
   try {
-    const rows = await api('GET', path);
+    const [rows, atRisk] = await Promise.all([
+      api('GET', path),
+      api('GET', '/suspension/at-risk').catch(() => [])   // best-effort; table still works without it
+    ]);
+    // /suspension/at-risk only returns providers with 4+ flags in 30 days,
+    // so providers below that stay at 0 here — an honest floor, not a fabricated count.
+    const flagsById = {};
+    (atRisk||[]).forEach(p => { flagsById[p.provider_id] = p.flags; });
+
     loadEl.style.display='none';
     tableEl.style.display='table';
     document.getElementById('prov-tbody').innerHTML = (rows||[]).map(p => {
       const pc = p.status==='active'?'pp-active':'pp-susp';
       const riskCol = p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#1D9E75';
+      const flags = flagsById[p.provider_id] || 0;
+      const pct = Math.round(flags/10*100);
       const actions = p.status==='active'
         ? `<button class="act-btn act-del" onclick="suspendProvider('${p.provider_id}','${p.name}')"><i class="ti ti-shield-off"></i>Suspend</button>
            <button class="act-btn act-del" onclick="deleteProvider('${p.provider_id}')" style="margin-left:4px"><i class="ti ti-trash"></i></button>`
@@ -753,8 +834,8 @@ async function loadProviders() {
         <td>${p.name}</td><td>${p.county}</td><td>${p.facility_type}</td>
         <td>
           <div class="flag-progress">
-            <div class="flag-bar-bg"><div class="flag-bar" style="width:0%;background:${riskCol}"></div></div>
-            <span class="risk-badge risk-${p.risk_tier}" style="font-size:10px">${p.risk_tier.toUpperCase()}</span>
+            <div class="flag-bar-bg"><div class="flag-bar" style="width:${pct}%;background:${riskCol}"></div></div>
+            <span class="risk-badge risk-${p.risk_tier}" style="font-size:10px">${flags}/10</span>
           </div>
         </td>
         <td><span class="prov-pill ${pc}">${p.status}</span></td>
@@ -811,12 +892,27 @@ function toggleAddForm() {
   f.style.display=f.style.display==='block'?'none':'block';
 }
 
-async function openReinstate(id, name) {
-  const reason = prompt(`Reinstate ${name}\n\nProvide a documented reason (required):`);
-  if (!reason||reason.length<10) { if(reason!==null) toast('Reason too short (min 10 chars)','#993C1D'); return; }
+function openReinstate(id, name) {
+  reinstateTarget = {id, name};
+  document.getElementById('reinstate-prov-name').textContent = name;
+  document.getElementById('reinstate-reason').value = '';
+  document.getElementById('reinstate-modal').classList.add('open');
+}
+
+function closeReinstateModal() {
+  document.getElementById('reinstate-modal').classList.remove('open');
+  reinstateTarget = null;
+}
+
+async function confirmReinstate() {
+  const reason = document.getElementById('reinstate-reason').value.trim();
+  if (!reason || reason.length < 10) { toast('Please enter a detailed reason (min 10 chars)','#993C1D'); return; }
+  if (!reinstateTarget) return;
   try {
-    await api('POST','/suspension/reinstate',{provider_id:id, reason});
-    toast(`${name} reinstated — risk tier remains HIGH`,'#1D9E75');
+    await api('POST','/suspension/reinstate',{provider_id: reinstateTarget.id, reason});
+    toast(`${reinstateTarget.name} reinstated — risk tier remains HIGH`,'#1D9E75');
+    closeReinstateModal();
+    document.getElementById('sus-banner').classList.remove('visible');
     loadProviders();
   } catch(e) { toast('Failed: '+e.message,'#993C1D'); }
 }
