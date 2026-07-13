@@ -97,6 +97,7 @@ class ClaimsVerificationPipeline:
             # Claim fails basic verification — reject without ML inference
             return self._persist_result(
                 db, claim_id,
+                provider_id=claim["provider_id"],
                 eligibility_check=prechecks["eligibility_check"],
                 provider_check=prechecks["provider_check"],
                 coverage_check=prechecks["coverage_check"],
@@ -129,6 +130,7 @@ class ClaimsVerificationPipeline:
 
         return self._persist_result(
             db, claim_id,
+            provider_id=claim["provider_id"],
             eligibility_check=True, provider_check=True, coverage_check=True,
             clinical_match=clinical_match, billing_compliant=billing_compliant,
             xgboost_score=xgboost_score, is_flagged=is_flagged,
@@ -139,6 +141,7 @@ class ClaimsVerificationPipeline:
     def _persist_result(self, db: Session, claim_id: str, **kwargs) -> dict:
         result_id = f"RES-{uuid.uuid4().hex[:10].upper()}"
         claim_status = kwargs.pop("claim_status")
+        provider_id = kwargs.pop("provider_id")
 
         db.execute(text("""
             INSERT INTO verification_results
@@ -161,6 +164,10 @@ class ClaimsVerificationPipeline:
 
         db.execute(text("UPDATE claims SET status = :status WHERE claim_id = :cid"),
                    {"status": claim_status, "cid": claim_id})
+
+        from .auto_suspend import check_and_suspend
+        check_and_suspend(db, provider_id, claim_id)
+
         db.commit()
 
         return {"result_id": result_id, "claim_id": claim_id,
