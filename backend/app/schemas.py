@@ -102,3 +102,29 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: str
+
+
+# ── CRUD: Staff Users ────────────────────────────────────────────────────────
+class UserCreateRequest(BaseModel):
+    full_name: str
+    email: str
+    password: str = Field(..., min_length=8)
+    role: str = Field(..., pattern="^(provider|officer|admin|finance)$")
+    provider_id: Optional[str] = None
+
+
+class UserUpdateRequest(BaseModel):
+    role: Optional[str] = Field(None, pattern="^(provider|officer|admin|finance)$")
+    is_active: Optional[bool] = None
+
+
+class UserResponse(BaseModel):
+    user_id: str
+    full_name: str
+    email: str
+    role: str
+    provider_id: Optional[str]
+    is_active: bool
+
+    class Config:
+        from_attributes = True

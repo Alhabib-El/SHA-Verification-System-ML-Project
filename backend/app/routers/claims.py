@@ -28,6 +28,23 @@ def _get_pipeline():
         return None
 
 
+@router.get("/tariffs")
+def list_tariff_codes(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role("provider", "officer", "admin")),
+):
+    """Powers the diagnosis/procedure dropdowns on the Submit Claim screen —
+    reads directly from sha_tariffs so the form always matches the current
+    approved schedule instead of a hardcoded list."""
+    rows = db.execute(text("""
+        SELECT diagnosis_code, procedure_code, facility_tier, approved_amount
+        FROM sha_tariffs
+        WHERE effective_to IS NULL
+        ORDER BY diagnosis_code, procedure_code
+    """)).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
 # ── FIXED: tariff-lookup MUST be before /{claim_id}/status ───────────────────
 @router.get("/tariff-lookup")
 def lookup_tariff(

@@ -10,8 +10,11 @@ from sqlalchemy import text
 from typing import Optional
 
 from ..database import get_db
-from ..schemas import ProviderCreateRequest, ProviderUpdateRequest, ProviderResponse
-from ..auth import require_role
+from ..schemas import (
+    ProviderCreateRequest, ProviderUpdateRequest, ProviderResponse,
+    UserCreateRequest, UserUpdateRequest, UserResponse,
+)
+from ..auth import require_role, hash_password
 
 router = APIRouter(prefix="/admin", tags=["Admin / CRUD"])
 
@@ -101,6 +104,76 @@ def list_tariffs(db: Session = Depends(get_db),
                   current_user: dict = Depends(require_role("admin"))):
     rows = db.execute(text("SELECT * FROM sha_tariffs WHERE effective_to IS NULL")).fetchall()
     return [dict(r._mapping) for r in rows]
+
+
+# ── STAFF USERS ──────────────────────────────────────────────────────────────
+@router.get("/users", response_model=list[UserResponse])
+def list_users(db: Session = Depends(get_db),
+               current_user: dict = Depends(require_role("admin"))):
+    """Powers the Admin CRUD 'Staff Users' section."""
+    rows = db.execute(text("""
+        SELECT user_id, full_name, email, role, provider_id, is_active
+        FROM system_users ORDER BY user_id
+    """)).fetchall()
+    return [dict(r._mapping) for r in rows]
+
+
+@router.post("/users", response_model=UserResponse, status_code=201)
+def create_user(payload: UserCreateRequest, db: Session = Depends(get_db),
+                 current_user: dict = Depends(require_role("admin"))):
+    """Lets an admin create any staff account — including granting admin
+    rights to a new user — not just provider portal logins."""
+    existing = db.execute(text(
+        "SELECT 1 FROM system_users WHERE email = :email"),
+        {"email": payload.email}).fetchone()
+    if existing:
+        raise HTTPException(400, "A user with this email already exists")
+
+    user_id = f"USR-{uuid.uuid4().hex[:8].upper()}"
+    db.execute(text("""
+        INSERT INTO system_users
+            (user_id, full_name, email, password_hash, role, provider_id, is_active)
+        VALUES
+            (:uid, :name, :email, :pwhash, :role, :provider_id, TRUE)
+    """), {
+        "uid": user_id, "name": payload.full_name, "email": payload.email,
+        "pwhash": hash_password(payload.password), "role": payload.role,
+        "provider_id": payload.provider_id,
+    })
+    db.commit()
+    row = db.execute(text("""
+        SELECT user_id, full_name, email, role, provider_id, is_active
+        FROM system_users WHERE user_id = :uid
+    """), {"uid": user_id}).fetchone()
+    return dict(row._mapping)
+
+
+@router.patch("/users/{user_id}", response_model=UserResponse)
+def update_user(user_id: str, payload: UserUpdateRequest,
+                 db: Session = Depends(get_db),
+                 current_user: dict = Depends(require_role("admin"))):
+    """Used to grant/revoke admin rights or deactivate a staff account."""
+    updates = payload.dict(exclude_none=True)
+    if not updates:
+        raise HTTPException(400, "No fields to update")
+    if user_id == current_user["sub"] and updates.get("is_active") is False:
+        raise HTTPException(400, "You cannot deactivate your own account")
+    if user_id == current_user["sub"] and updates.get("role") not in (None, "admin"):
+        raise HTTPException(400, "You cannot remove your own admin rights")
+
+    set_clause = ", ".join(f"{k} = :{k}" for k in updates)
+    db.execute(text(f"""
+        UPDATE system_users SET {set_clause} WHERE user_id = :uid
+    """), {**updates, "uid": user_id})
+    db.commit()
+
+    row = db.execute(text("""
+        SELECT user_id, full_name, email, role, provider_id, is_active
+        FROM system_users WHERE user_id = :uid
+    """), {"uid": user_id}).fetchone()
+    if not row:
+        raise HTTPException(404, "User not found")
+    return dict(row._mapping)
 
 
 # ── THRESHOLD CONFIGURATION ──────────────────────────────────────────────────

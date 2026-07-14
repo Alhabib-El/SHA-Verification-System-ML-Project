@@ -17,11 +17,27 @@ router = APIRouter(prefix="/review", tags=["Officer Review"])
 
 
 @router.get("/queue")
-def get_flagged_queue(
+def get_review_queue(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role("officer", "admin")),  # FIXED: added admin
 ):
-    rows = db.execute(text("SELECT * FROM v_flagged_claims_queue")).fetchall()
+    """
+    Everything a provider has submitted that isn't yet at a terminal status —
+    not just ML-flagged claims — so officers (and admins, who share this same
+    screen) can see and act on every pending submission.
+    """
+    rows = db.execute(text("""
+        SELECT
+            c.claim_id, c.submission_date, c.status,
+            p.name AS provider_name, p.county,
+            c.diagnosis_code, c.claimed_amount, c.amount_ratio,
+            vr.xgboost_score, vr.is_flagged
+        FROM claims c
+        JOIN health_providers p      ON c.provider_id = p.provider_id
+        LEFT JOIN verification_results vr ON c.claim_id = vr.claim_id
+        WHERE c.status IN ('submitted', 'verified', 'flagged', 'under_review')
+        ORDER BY vr.is_flagged DESC NULLS LAST, c.submission_date DESC
+    """)).fetchall()
     return [dict(r._mapping) for r in rows]
 
 
@@ -42,12 +58,12 @@ def get_claim_for_review(
         FROM claims c
         JOIN health_providers p      ON c.provider_id = p.provider_id
         JOIN sha_members m           ON c.patient_id  = m.patient_id
-        JOIN verification_results vr ON c.claim_id    = vr.claim_id
+        LEFT JOIN verification_results vr ON c.claim_id = vr.claim_id
         WHERE c.claim_id = :cid
     """), {"cid": claim_id}).fetchone()
 
     if not row:
-        raise HTTPException(404, "Claim not found or not yet verified")
+        raise HTTPException(404, "Claim not found")
 
     # Log view in audit trail
     db.execute(text("""

@@ -3,6 +3,7 @@ ml_pipeline/pipeline.py
 ClaimsVerificationPipeline — the single public entry point implementing
 all six stages of the verification process (Figure 5.3 / Table 5.2).
 """
+import json
 import uuid
 import joblib
 from datetime import date
@@ -115,7 +116,7 @@ class ClaimsVerificationPipeline:
 
         from .feature_engineering import check_clinical_match
         clinical_match = check_clinical_match(db, claim["diagnosis_code"], claim["procedure_code"])
-        billing_compliant = (claim["claimed_amount"] / tariff_amount) <= 1.20 if tariff_amount else False
+        billing_compliant = (float(claim["claimed_amount"]) / tariff_amount) <= 1.20 if tariff_amount else False
 
         # ── STAGE 4: XGBoost Inference ───────────────────────────────────
         xgboost_score = float(self.model.predict_proba(feature_vector)[0][1])
@@ -157,8 +158,8 @@ class ClaimsVerificationPipeline:
         """), {
             "result_id": result_id, "claim_id": claim_id,
             "model_version": MODEL_VERSION, "flag_threshold": DEFAULT_FLAG_THRESHOLD,
-            "shap_values": kwargs.pop("shap_raw"),
-            "top_features": kwargs.pop("top_features"),
+            "shap_values": json.dumps(shap_raw) if (shap_raw := kwargs.pop("shap_raw")) is not None else None,
+            "top_features": json.dumps(top_features) if (top_features := kwargs.pop("top_features")) is not None else None,
             **kwargs,
         })
 

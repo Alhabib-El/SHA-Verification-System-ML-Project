@@ -23,7 +23,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;c
 .app-wrap{display:none;flex-direction:column;min-height:100vh}
 .topbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
-.brand .dot{width:9px;height:9px;border-radius:50%;background:#189B86}
 .user-info{display:flex;align-items:center;gap:12px;font-size:12px;color:#666}
 .nav-tabs-custom{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 12px;display:flex;overflow-x:auto}
 .nav-tab{padding:10px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:#666;border-bottom:2px solid transparent;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap}
@@ -103,6 +102,8 @@ table.dt tr:hover td{background:#fafafa}
 .sus-ban-close{background:none;border:none;cursor:pointer;color:#993C1D;font-size:16px;padding:0;margin-left:8px}
 .sus-toast{position:fixed;top:70px;right:20px;background:#D85A30;color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;display:none;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);max-width:340px;line-height:1.4;animation:slideDown .3s ease}
 .sus-toast.visible{display:block}
+.conn-banner{position:fixed;top:0;left:0;right:0;background:#BA7517;color:#fff;padding:8px 16px;font-size:12px;font-weight:600;text-align:center;display:none;z-index:10000;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.conn-banner.visible{display:block}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal-box{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);animation:modalIn .2s ease}
@@ -130,6 +131,9 @@ table.dt tr:hover td{background:#fafafa}
 </style>
 </head>
 <body>
+
+<!-- CONNECTION BANNER (shown while api() is retrying after a network failure) -->
+<div class="conn-banner" id="conn-banner"></div>
 
 <!-- SUSPENSION TOAST (fires when an at-risk provider is found to be suspended) -->
 <div class="sus-toast" id="sus-toast">
@@ -200,7 +204,7 @@ table.dt tr:hover td{background:#fafafa}
 <div class="app-wrap" id="app-wrap">
 
   <div class="topbar">
-    <div class="brand"><span class="dot"></span>SHA Claims Verification System</div>
+    <div class="brand"><img src="https://raw.githubusercontent.com/Alhabib-El/SHA-Verification-System-ML-Project/main/References/sha.png" alt="SHA" style="height:20px;width:auto;object-fit:contain"> SHA Claims Verification System</div>
     <div class="user-info">
       <span id="topbar-user"></span>
       <span id="topbar-role" style="background:#DFF3F1;color:#0D6F63;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase"></span>
@@ -242,13 +246,8 @@ table.dt tr:hover td{background:#fafafa}
           </div>
           <div class="form-group">
             <label>Diagnosis code (ICD-10)</label>
-            <select id="diag-code" onchange="loadTariff()">
+            <select id="diag-code" onchange="onDiagnosisChange()">
               <option value="">— select —</option>
-              <option value="J18.0">J18.0 — Pneumonia</option>
-              <option value="A09">A09 — Diarrhoea</option>
-              <option value="K35">K35 — Appendicitis</option>
-              <option value="O80">O80 — Normal delivery</option>
-              <option value="E11">E11 — Type 2 diabetes</option>
             </select>
           </div>
         </div>
@@ -257,11 +256,6 @@ table.dt tr:hover td{background:#fafafa}
             <label>Procedure code</label>
             <select id="proc-code" onchange="loadTariff()">
               <option value="">— select —</option>
-              <option value="99232">99232 — Subsequent hospital care</option>
-              <option value="99233">99233 — Complex hospital care</option>
-              <option value="44950">44950 — Appendectomy</option>
-              <option value="59400">59400 — Obstetric care</option>
-              <option value="83036">83036 — HbA1c test</option>
             </select>
           </div>
           <div class="form-group">
@@ -379,6 +373,41 @@ table.dt tr:hover td{background:#fafafa}
           </div>
         </div>
       </div>
+
+      <div class="card">
+        <div class="section-head">
+          <div class="card-title" style="margin:0"><i class="ti ti-users"></i>Staff users</div>
+          <button class="btn btn-primary" onclick="toggleUserForm()" style="font-size:12px"><i class="ti ti-plus"></i>Add user</button>
+        </div>
+        <div class="error-msg" id="users-error"></div>
+        <div id="users-loading" class="loading"><i class="ti ti-loader"></i> Loading users...</div>
+        <table class="dt" id="users-table" style="display:none">
+          <thead><tr><th>User ID</th><th>Name</th><th>Email</th><th>Role</th><th>Provider</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+        <div class="add-form" id="user-add-form">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px"><i class="ti ti-plus"></i> Add new staff user</div>
+          <div class="form-row">
+            <div class="form-group"><label>Full name</label><input type="text" id="new-user-name"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="new-user-email"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Password</label><input type="password" id="new-user-password" placeholder="min. 8 characters"></div>
+            <div class="form-group"><label>Role</label>
+              <select id="new-user-role">
+                <option value="officer">Officer</option>
+                <option value="admin">Admin</option>
+                <option value="finance">Finance</option>
+                <option value="provider">Provider</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" onclick="toggleUserForm()">Cancel</button>
+            <button class="btn btn-primary" onclick="addUser()">Save user →</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- SCREEN 5: REPORTS -->
@@ -452,16 +481,45 @@ const API = 'http://localhost:8000';
 let authToken  = localStorage.getItem('sha_token')  || null;
 let userRole   = localStorage.getItem('sha_role')   || null;
 let userName   = localStorage.getItem('sha_name')   || null;
+let providerId = localStorage.getItem('sha_provider_id') || null;
 let currentReviewClaimId = null;
 let reinstateTarget = null;
 
 // ══ API HELPER ════════════════════════════════════════════════════════════════
-async function api(method, path, body=null) {
+function showConnBanner(msg) {
+  const el = document.getElementById('conn-banner');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+function hideConnBanner() {
+  document.getElementById('conn-banner').classList.remove('visible');
+}
+
+const API_MAX_RETRIES = 3;
+
+async function api(method, path, body=null, _retry=0) {
   const headers = {'Content-Type':'application/json'};
   if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
   const opts = {method, headers};
   if (body) opts.body = JSON.stringify(body);
-  const res = await fetch(API + path, opts);
+
+  let res;
+  try {
+    res = await fetch(API + path, opts);
+  } catch (networkErr) {
+    // fetch() throws (rather than resolving with a bad status) only on
+    // connection-level failures — server down/restarting, DNS, etc.
+    if (_retry < API_MAX_RETRIES) {
+      showConnBanner(`Reconnecting to server… (attempt ${_retry + 1}/${API_MAX_RETRIES})`);
+      await new Promise(r => setTimeout(r, 1000 * Math.pow(2, _retry)));
+      return api(method, path, body, _retry + 1);
+    }
+    showConnBanner('Unable to reach the server. Check that the backend is running.');
+    setTimeout(hideConnBanner, 6000);
+    throw new Error('Could not reach the server. Please check your connection and try again.');
+  }
+  hideConnBanner();
+
   if (res.status === 401) { doLogout(); return null; }
   if (!res.ok) {
     const err = await res.json().catch(() => ({detail: 'Request failed'}));
@@ -482,12 +540,14 @@ async function doLogin() {
   btn.disabled  = true;
   try {
     const data = await api('POST', '/auth/login', {email, password: pass});
-    authToken = data.access_token;
-    userRole  = data.role;
-    userName  = data.full_name;
+    authToken  = data.access_token;
+    userRole   = data.role;
+    userName   = data.full_name;
+    providerId = data.provider_id || null;
     localStorage.setItem('sha_token', authToken);
     localStorage.setItem('sha_role',  userRole);
     localStorage.setItem('sha_name',  userName);
+    if (providerId) localStorage.setItem('sha_provider_id', providerId);
     showApp();
   } catch(e) {
     errEl.textContent = e.message;
@@ -498,7 +558,7 @@ async function doLogin() {
 }
 
 function doLogout() {
-  authToken = userRole = userName = null;
+  authToken = userRole = userName = providerId = null;
   localStorage.clear();
   document.getElementById('app-wrap').style.display  = 'none';
   document.getElementById('login-wrap').style.display = 'flex';
@@ -516,11 +576,28 @@ function showApp() {
   document.querySelector('[data-screen="queue"]').style.display  = isProvider ? 'none' : '';
   document.querySelector('[data-screen="admin"]').style.display  = userRole === 'admin' ? '' : 'none';
   document.querySelector('[data-screen="reports"]').style.display= (userRole==='admin'||userRole==='officer') ? '' : 'none';
+  // Auto-fill + lock the provider ID on Submit Claim for provider logins —
+  // they can only submit on behalf of their own facility, so it's not an
+  // editable field at all (disabled, not just read-only).
+  const provIdInput = document.getElementById('submit-provider-id');
+  if (isProvider && providerId) {
+    provIdInput.value = providerId;
+    provIdInput.disabled = true;
+    provIdInput.title = 'Automatically linked to your account';
+    provIdInput.style.background = '#f4f6f8';
+    provIdInput.style.color = '#1a1a2e';
+  } else {
+    provIdInput.disabled = false;
+    provIdInput.title = '';
+    provIdInput.style.background = '';
+    provIdInput.style.color = '';
+  }
   // Set default date range for reports
   const today = new Date().toISOString().split('T')[0];
   const monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
   document.getElementById('rpt-start').value = monthAgo;
   document.getElementById('rpt-end').value   = today;
+  populateTariffDropdowns();
   // Load first active screen
   const firstActive = document.querySelector('.nav-tab:not([style*="none"])');
   if (firstActive) firstActive.click();
@@ -533,11 +610,92 @@ function showScreen(name, btn) {
   document.getElementById('screen-'+name).classList.add('active');
   if(btn) btn.classList.add('active');
   if (name === 'queue')   { loadMetrics(); loadQueue(); }
-  if (name === 'admin')   loadProviders();
+  if (name === 'admin')   { loadProviders(); loadUsers(); }
   if (name === 'reports') loadReportsData();
 }
 
 // ══ SCREEN 1: SUBMIT CLAIM ════════════════════════════════════════════════════
+
+// Friendly labels for the codes in the current SHA tariff schedule (sha_tariffs
+// is the source of truth for which codes are valid — this map only adds
+// human-readable text next to the code in the dropdown).
+const DIAGNOSIS_LABELS = {
+  'A00.0':'Cholera (Vibrio cholerae 01, biovar cholerae)', 'A01.00':'Typhoid fever, unspecified',
+  'A09':'Infectious gastroenteritis and colitis', 'A15.0':'Tuberculosis of lung',
+  'A23.0':'Brucellosis (Brucella melitensis)', 'A37.00':'Whooping cough, uncomplicated',
+  'A53.9':'Syphilis, unspecified', 'A54.00':'Gonococcal infection, lower genitourinary tract',
+  'A90':'Dengue fever', 'B05.0':'Measles complicated by encephalitis',
+  'B20':'HIV disease', 'B54':'Unspecified malaria',
+  'B65.0':'Schistosomiasis (S. haematobium)', 'B76.0':'Ancylostomiasis (hookworm)',
+  'B77.0':'Ascariasis with intestinal complications', 'B79':'Trichuriasis',
+  'D57.00':'Hb-SS disease with crisis', 'D64.9':'Anemia, unspecified',
+  'E10.9':'Type 1 diabetes mellitus, uncomplicated', 'E11.9':'Type 2 diabetes mellitus, uncomplicated',
+  'E40':'Kwashiorkor', 'E43':'Severe protein-calorie malnutrition',
+  'E78.5':'Hyperlipidemia, unspecified', 'F32.9':'Major depressive disorder, single episode',
+  'F41.1':'Generalized anxiety disorder', 'G00.1':'Pneumococcal meningitis',
+  'G40.909':'Epilepsy, unspecified', 'G43.909':'Migraine, unspecified',
+  'H66.90':'Otitis media, unspecified ear', 'I10':'Essential (primary) hypertension',
+  'I21.4':'Non-ST elevation (NSTEMI) myocardial infarction', 'I50.20':'Systolic (congestive) heart failure',
+  'I63.9':'Cerebral infarction, unspecified', 'J02.9':'Acute pharyngitis, unspecified',
+  'J18.9':'Pneumonia, unspecified organism', 'J20.9':'Acute bronchitis, unspecified',
+  'J44.9':'Chronic obstructive pulmonary disease', 'J45.909':'Asthma, uncomplicated',
+  'K02.9':'Dental caries, unspecified', 'K21.9':'Gastro-esophageal reflux disease',
+  'K29.70':'Gastritis, unspecified, without bleeding', 'K35.80':'Unspecified acute appendicitis',
+  'K80.00':'Calculus of gallbladder with acute cholecystitis', 'M17.0':'Bilateral primary osteoarthritis of knee',
+  'M54.5':'Low back pain', 'N18.9':'Chronic kidney disease, unspecified',
+  'N20.0':'Calculus of kidney', 'N39.0':'Urinary tract infection',
+  'O14.90':'Unspecified pre-eclampsia', 'O80':'Full-term uncomplicated delivery',
+  'P07.30':'Preterm newborn, unspecified gestation', 'P59.9':'Neonatal jaundice, unspecified',
+  'S72.001A':'Fracture, neck of right femur (closed, initial)', 'T30.0':'Burn, unspecified body region/degree',
+  'T63.001A':'Toxic effect of snake venom (accidental, initial)', 'Z34.01':'Supervision of normal first pregnancy, 1st trimester',
+};
+
+const PROCEDURE_LABELS = {
+  '87045':'Stool culture', '87040':'Blood culture', '99213':'Outpatient visit / consultation',
+  '87116':'Sputum AFB smear', '86622':'Brucella antibody test', '86592':'RPR test (syphilis)',
+  '87591':'NAAT test (gonorrhea)', '86790':'Dengue NS1/IgM test', '99223':'Initial hospital care (admission)',
+  '87536':'HIV viral load', '87207':'Malaria smear/RDT', '81015':'Urine microscopy',
+  '87177':'Stool O&P exam', '36430':'Blood transfusion', '85025':'Complete blood count (CBC)',
+  '83036':'HbA1c test', '80061':'Lipid panel', '90791':'Psychiatric diagnostic evaluation',
+  '62270':'Lumbar puncture', '95816':'EEG', '92700':'ENT exam / otoscopy',
+  '92941':'Cardiac catheterization / PCI', '93306':'Echocardiogram', '70450':'CT scan, brain',
+  '71046':'Chest X-ray', '94010':'Spirometry', '94640':'Nebulizer treatment',
+  'D2391':'Dental filling (composite)', '43235':'Upper GI endoscopy', '44950':'Appendectomy',
+  '47562':'Laparoscopic cholecystectomy', '73562':'Knee X-ray', '80069':'Renal function panel',
+  '74176':'Renal ultrasound', '87086':'Urinalysis + culture', '59425':'Obstetric monitoring/admission',
+  '59400':'Normal vaginal delivery', '99477':'NICU care', '99480':'Phototherapy (neonatal)',
+  '27245':'Hip fracture fixation (ORIF)', '16020':'Burn wound care/debridement', '96401':'Antivenom/injection administration',
+};
+
+// Populates the diagnosis/procedure dropdowns from the live SHA tariff
+// schedule (sha_tariffs) instead of a hardcoded list, so new codes show up
+// automatically. Called once after login.
+let TARIFF_ROWS = [];
+async function populateTariffDropdowns() {
+  try {
+    const rows = await api('GET', '/claims/tariffs');
+    TARIFF_ROWS = rows || [];
+    const diagCodes = [...new Set(TARIFF_ROWS.map(r => r.diagnosis_code))].sort();
+    const procCodes = [...new Set(TARIFF_ROWS.map(r => r.procedure_code))].sort();
+
+    const diagSel = document.getElementById('diag-code');
+    const procSel = document.getElementById('proc-code');
+    diagSel.innerHTML = '<option value="">— select —</option>' + diagCodes.map(c =>
+      `<option value="${c}">${c} — ${DIAGNOSIS_LABELS[c] || c}</option>`).join('');
+    procSel.innerHTML = '<option value="">— select —</option>' + procCodes.map(c =>
+      `<option value="${c}">${c} — ${PROCEDURE_LABELS[c] || c}</option>`).join('');
+  } catch(e) { /* dropdowns stay empty except the placeholder — form still usable via tariff-lookup errors */ }
+}
+
+// Diagnosis and procedure are paired 1:1 in the SHA tariff schedule, so
+// picking a diagnosis auto-selects its approved procedure code too.
+function onDiagnosisChange() {
+  const d = document.getElementById('diag-code').value;
+  const match = TARIFF_ROWS.find(r => r.diagnosis_code === d);
+  document.getElementById('proc-code').value = match ? match.procedure_code : '';
+  loadTariff();
+}
+
 let currentTariff = null;
 async function loadTariff() {
   const d = document.getElementById('diag-code').value;
@@ -622,7 +780,11 @@ async function submitClaim() {
 }
 
 function resetSubmit() {
-  ['sha-member-no','submit-provider-id','service-date','claimed-amount'].forEach(id => document.getElementById(id).value='');
+  ['sha-member-no','service-date','claimed-amount'].forEach(id => document.getElementById(id).value='');
+  // Provider ID is only cleared if it's a free-typed field (admin); a
+  // provider login's auto-linked/disabled value must survive a reset.
+  const provIdInput = document.getElementById('submit-provider-id');
+  provIdInput.value = provIdInput.disabled ? providerId : '';
   ['diag-code','proc-code'].forEach(id => document.getElementById(id).value='');
   document.getElementById('tariff-display').value='';
   ['tariff-hint','ratio-display'].forEach(id => document.getElementById(id).innerHTML='');
@@ -681,14 +843,17 @@ async function loadQueue() {
     if (!rows || rows.length===0) { emptyEl.style.display='block'; return; }
     tableEl.style.display='table';
     const tbody = document.getElementById('queue-tbody');
+    const STATUS_LABELS = {submitted:'Submitted', verified:'Verified', flagged:'Flagged', under_review:'Under Review'};
+    const STATUS_CLASS  = {submitted:'st-pend', verified:'st-app', flagged:'st-flag', under_review:'st-flag'};
     tbody.innerHTML = rows.map(r => {
-      const sc = r.xgboost_score>=.70?'sc-high':r.xgboost_score>=.50?'sc-med':'sc-ok';
+      const hasScore = r.xgboost_score !== null && r.xgboost_score !== undefined;
+      const sc = hasScore ? (r.xgboost_score>=.70?'sc-high':r.xgboost_score>=.50?'sc-med':'sc-ok') : '';
       return `<tr>
         <td style="font-family:monospace;font-size:11px">${r.claim_id}</td>
         <td>${r.provider_name}</td><td>${r.county||'—'}</td>
         <td>KES ${Number(r.claimed_amount).toLocaleString()}</td>
-        <td><span class="score-pill ${sc}">${Number(r.xgboost_score).toFixed(3)}</span></td>
-        <td><span class="st-pill st-flag">Flagged</span></td>
+        <td>${hasScore ? `<span class="score-pill ${sc}">${Number(r.xgboost_score).toFixed(3)}</span>` : '—'}</td>
+        <td><span class="st-pill ${STATUS_CLASS[r.status]||'st-pend'}">${STATUS_LABELS[r.status]||r.status}</span></td>
         <td><button class="btn" onclick="openReview('${r.claim_id}')" style="font-size:11px;padding:4px 10px">
           <i class="ti ti-eye"></i>Review</button></td>
       </tr>`;
@@ -748,18 +913,14 @@ async function openReview(claimId) {
           </div>
           <div style="margin-top:14px">
             <div class="section-label">Pre-check results</div>
-            <div class="check-row ${d.eligibility_check?'ck-ok':'ck-fail'}">
-              <i class="ti ti-${d.eligibility_check?'circle-check':'circle-x'}"></i> Eligibility: ${d.eligibility_check?'passed':'FAILED'}
-            </div>
-            <div class="check-row ${d.provider_check?'ck-ok':'ck-fail'}">
-              <i class="ti ti-${d.provider_check?'circle-check':'circle-x'}"></i> Provider: ${d.provider_check?'passed':'FAILED'}
-            </div>
-            <div class="check-row ${d.clinical_match?'ck-ok':'ck-fail'}">
-              <i class="ti ti-${d.clinical_match?'circle-check':'circle-x'}"></i> Clinical match: ${d.clinical_match?'passed':'FAILED'}
-            </div>
-            <div class="check-row ${d.billing_compliant?'ck-ok':'ck-fail'}">
-              <i class="ti ti-${d.billing_compliant?'circle-check':'circle-x'}"></i> Billing compliance: ${d.billing_compliant?'passed':'FAILED'}
-            </div>
+            ${['eligibility_check','provider_check','clinical_match','billing_compliant'].map(k => {
+              const labels = {eligibility_check:'Eligibility', provider_check:'Provider', clinical_match:'Clinical match', billing_compliant:'Billing compliance'};
+              const v = d[k];
+              const cls  = v==null ? '' : (v ? 'ck-ok' : 'ck-fail');
+              const icon = v==null ? 'help' : (v ? 'circle-check' : 'circle-x');
+              const text = v==null ? 'not yet run' : (v ? 'passed' : 'FAILED');
+              return `<div class="check-row ${cls}"><i class="ti ti-${icon}"></i> ${labels[k]}: ${text}</div>`;
+            }).join('')}
           </div>
         </div>
         <div>
@@ -896,6 +1057,86 @@ async function addProvider() {
 function toggleAddForm() {
   const f=document.getElementById('add-form');
   f.style.display=f.style.display==='block'?'none':'block';
+}
+
+// ── Staff users (admin can create officers/admins/finance/provider logins) ──
+async function loadUsers() {
+  const loadEl  = document.getElementById('users-loading');
+  const tableEl = document.getElementById('users-table');
+  const errEl   = document.getElementById('users-error');
+  loadEl.style.display='block'; tableEl.style.display='none'; errEl.style.display='none';
+  try {
+    const rows = await api('GET', '/admin/users');
+    loadEl.style.display='none';
+    tableEl.style.display='table';
+    const roles = ['provider','officer','admin','finance'];
+    document.getElementById('users-tbody').innerHTML = (rows||[]).map(u => {
+      const roleSelect = `<select onchange="changeUserRole('${u.user_id}', this.value)" style="font-size:11px;padding:3px 5px">
+        ${roles.map(r => `<option value="${r}" ${r===u.role?'selected':''}>${r}</option>`).join('')}
+      </select>`;
+      const statusPill = u.is_active
+        ? '<span class="prov-pill pp-active">active</span>'
+        : '<span class="prov-pill pp-susp">inactive</span>';
+      const toggleBtn = u.is_active
+        ? `<button class="act-btn act-del" onclick="toggleUserActive('${u.user_id}', false)"><i class="ti ti-user-off"></i>Deactivate</button>`
+        : `<button class="act-btn act-edit" onclick="toggleUserActive('${u.user_id}', true)"><i class="ti ti-user-check"></i>Activate</button>`;
+      return `<tr>
+        <td style="font-family:monospace;font-size:11px">${u.user_id}</td>
+        <td>${u.full_name}</td><td>${u.email}</td>
+        <td>${roleSelect}</td>
+        <td style="font-family:monospace;font-size:11px">${u.provider_id||'—'}</td>
+        <td>${statusPill}</td>
+        <td>${toggleBtn}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">No users found</td></tr>';
+  } catch(e) {
+    loadEl.style.display='none';
+    errEl.textContent = 'Failed to load users: '+e.message;
+    errEl.style.display='block';
+  }
+}
+
+async function changeUserRole(userId, role) {
+  try {
+    await api('PATCH', `/admin/users/${userId}`, {role});
+    toast('Role updated to ' + role, '#189B86');
+    loadUsers();
+  } catch(e) { toast('Failed: '+e.message, '#993C1D'); loadUsers(); }
+}
+
+async function toggleUserActive(userId, active) {
+  try {
+    await api('PATCH', `/admin/users/${userId}`, {is_active: active});
+    toast(active ? 'User activated' : 'User deactivated', active ? '#189B86' : '#D85A30');
+    loadUsers();
+  } catch(e) { toast('Failed: '+e.message, '#993C1D'); }
+}
+
+async function addUser() {
+  const payload = {
+    full_name: document.getElementById('new-user-name').value.trim(),
+    email:     document.getElementById('new-user-email').value.trim(),
+    password:  document.getElementById('new-user-password').value,
+    role:      document.getElementById('new-user-role').value,
+  };
+  if (!payload.full_name || !payload.email || payload.password.length < 8) {
+    toast('Name, email, and an 8+ character password are required', '#993C1D');
+    return;
+  }
+  try {
+    await api('POST', '/admin/users', payload);
+    toast('User added successfully', '#189B86');
+    toggleUserForm();
+    document.getElementById('new-user-name').value='';
+    document.getElementById('new-user-email').value='';
+    document.getElementById('new-user-password').value='';
+    loadUsers();
+  } catch(e) { toast('Failed: '+e.message, '#993C1D'); }
+}
+
+function toggleUserForm() {
+  const f = document.getElementById('user-add-form');
+  f.style.display = f.style.display==='block' ? 'none' : 'block';
 }
 
 function openReinstate(id, name) {

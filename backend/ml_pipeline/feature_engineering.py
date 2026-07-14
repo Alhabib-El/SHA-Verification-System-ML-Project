@@ -119,7 +119,7 @@ def get_provider_amount_zscore(db: Session, provider_id: str, claimed_amount: fl
     """), {"pid": provider_id}).fetchone()
     if not row or row.std_amt is None or row.std_amt == 0:
         return 0.0
-    return float((claimed_amount - row.mean_amt) / row.std_amt)
+    return float((claimed_amount - float(row.mean_amt)) / float(row.std_amt))
 
 
 def get_patient_facility_count_7d(db: Session, patient_id: str) -> int:
@@ -176,13 +176,14 @@ def build_feature_vector(db: Session, claim: dict, provider: dict, tariff_amount
     Assembles the 17-feature vector for a single claim, in FEATURE_ORDER.
     `claim` and `provider` are plain dicts pulled from the ORM objects.
     """
-    amount_ratio = claim["claimed_amount"] / tariff_amount if tariff_amount else 1.0
+    claimed_amount = float(claim["claimed_amount"])   # Postgres NUMERIC comes back as Decimal
+    amount_ratio = claimed_amount / tariff_amount if tariff_amount else 1.0
     submission_delay_days = (claim["submission_date"].date() - claim["service_date"]).days
 
     features: Dict[str, float] = {
         "amount_ratio": amount_ratio,
         "provider_claim_freq_30d": get_provider_claim_frequency_30d(db, provider["provider_id"]),
-        "provider_amount_zscore": get_provider_amount_zscore(db, provider["provider_id"], claim["claimed_amount"]),
+        "provider_amount_zscore": get_provider_amount_zscore(db, provider["provider_id"], claimed_amount),
         "diagnosis_procedure_match": int(check_clinical_match(db, claim["diagnosis_code"], claim["procedure_code"])),
         "submission_delay_days": submission_delay_days,
         "patient_facility_count_7d": get_patient_facility_count_7d(db, claim["patient_id"]),
@@ -190,7 +191,7 @@ def build_feature_vector(db: Session, claim: dict, provider: dict, tariff_amount
         "facility_type_encoded": FACILITY_TYPE_MAP.get(provider["facility_type"], -1),
         "county_encoded": COUNTY_MAP.get(provider["county"], -1),
         "diagnosis_category_encoded": encode_diagnosis_category(claim["diagnosis_code"]),
-        "claimed_amount_log": float(np.log1p(claim["claimed_amount"])),
+        "claimed_amount_log": float(np.log1p(claimed_amount)),
         "tariff_amount_log": float(np.log1p(tariff_amount)) if tariff_amount else 0.0,
         "provider_approval_rate": get_provider_approval_rate(db, provider["provider_id"]),
         "patient_claim_count_90d": get_patient_claim_count_90d(db, claim["patient_id"]),

@@ -19,7 +19,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
     user = db.execute(text("""
-        SELECT user_id, full_name, password_hash, role, is_active
+        SELECT user_id, full_name, password_hash, role, is_active, provider_id
         FROM system_users WHERE email = :email
     """), {"email": payload.email}).fetchone()
 
@@ -40,4 +40,5 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
         "role":         user.role,
         "full_name":    user.full_name,   # ADDED — frontend displays this in topbar
         "user_id":      user.user_id,     # ADDED — frontend uses for audit log display
+        "provider_id":  user.provider_id, # lets the frontend auto-fill Submit Claim for provider logins
     }

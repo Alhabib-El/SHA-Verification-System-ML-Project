@@ -61,12 +61,18 @@ def train_xgboost_model(X, y, tune_hyperparameters: bool = False):
 
     X_train_res, y_train_res = apply_smote(X_train, y_train)
 
+    # SMOTE already rebalances the training set to ~1:1, so applying the
+    # raw-imbalance scale_pos_weight on top of it double-corrects and
+    # pushes the model to over-predict the positive class. Reset it to 1
+    # for the resampled data the model actually trains on.
+    resampled_config = {**BASE_CONFIG, "scale_pos_weight": 1}
+
     with mlflow.start_run(run_name="xgboost_claims_verification"):
 
         if tune_hyperparameters:
             cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-            base_model = xgb.XGBClassifier(**{**BASE_CONFIG, **{
-                k: v for k, v in BASE_CONFIG.items() if k not in PARAM_GRID
+            base_model = xgb.XGBClassifier(**{**resampled_config, **{
+                k: v for k, v in resampled_config.items() if k not in PARAM_GRID
             }})
             grid = GridSearchCV(
                 base_model, PARAM_GRID, scoring="f1", cv=cv, n_jobs=-1, verbose=1
@@ -74,17 +80,22 @@ def train_xgboost_model(X, y, tune_hyperparameters: bool = False):
             grid.fit(X_train_res, y_train_res)
             best_params = grid.best_params_
             mlflow.log_params(best_params)
-            config = {**BASE_CONFIG, **best_params}
+            config = {**resampled_config, **best_params}
         else:
-            config = BASE_CONFIG
+            config = resampled_config
             mlflow.log_params(config)
 
-        model = xgb.XGBClassifier(**config, early_stopping_rounds=20)
-        model.fit(
-            X_train_res, y_train_res,
-            eval_set=[(X_val, y_val)],
-            verbose=50
-        )
+        # Early stopping needs a validation split large enough for "best
+        # iteration" to be a meaningful signal rather than noise — on a
+        # small dataset a handful of validation rows can pick an absurdly
+        # early stopping point (e.g. iteration 2) that looks fine on the
+        # tiny eval set but leaves the model badly underfit everywhere else.
+        use_early_stopping = len(X_val) >= 30
+        model = xgb.XGBClassifier(**config, early_stopping_rounds=20 if use_early_stopping else None)
+        if use_early_stopping:
+            model.fit(X_train_res, y_train_res, eval_set=[(X_val, y_val)], verbose=50)
+        else:
+            model.fit(X_train_res, y_train_res, verbose=50)
 
         # Evaluation on held-out test set (Section 3.6.4)
         y_pred = model.predict(X_test)
