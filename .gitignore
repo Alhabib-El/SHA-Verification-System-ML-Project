@@ -5,3 +5,4 @@ venv/
 backend/venv/
 *.joblib
 /.vscode/settings.json
+.claude/

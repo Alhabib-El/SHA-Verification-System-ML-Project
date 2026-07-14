@@ -114,7 +114,7 @@ class ClaimsVerificationPipeline:
         feature_vector = build_feature_vector(db, claim, provider, tariff_amount)
 
         from .feature_engineering import check_clinical_match
-        clinical_match = check_clinical_match(claim["diagnosis_code"], claim["procedure_code"])
+        clinical_match = check_clinical_match(db, claim["diagnosis_code"], claim["procedure_code"])
         billing_compliant = (claim["claimed_amount"] / tariff_amount) <= 1.20 if tariff_amount else False
 
         # ── STAGE 4: XGBoost Inference ───────────────────────────────────
