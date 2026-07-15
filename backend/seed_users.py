@@ -38,9 +38,12 @@ USERS = [
     {"user_id":"USR-002","full_name":"Al-Habib",
      "email":"sichemo@mylife.mku.ac.ke","password_hash":hash_pw("Admin@2026"),
      "role":"admin","provider_id":None,"is_active":True},
-    {"user_id":"USR-003","full_name":"Peter Kiprop",
-     "email":"p.kiprop@sha.go.ke","password_hash":hash_pw("Finance@2025"),
+    {"user_id":"USR-003","full_name":"Della Achando",
+     "email":"d.achando@sha.go.ke","password_hash":hash_pw("Officer@2025"),
      "role":"finance","provider_id":None,"is_active":True},
+    {"user_id":"USR-005","full_name":"SHA Admin",
+     "email":"admin@sha.go.ke","password_hash":hash_pw("Admin@2025"),
+     "role":"admin","provider_id":None,"is_active":True},
     {"user_id":"USR-004","full_name":"City Hospital Portal",
      "email":"portal@cityhospital.co.ke","password_hash":hash_pw(PROVIDER_TEST_PASSWORD),
      "role":"provider","provider_id":"PRV-001","is_active":True},
@@ -94,5 +97,6 @@ with engine.connect() as conn:
 print("\nDone. Login credentials:")
 print("  Officer  : j.mwangi@sha.go.ke        / Officer@2025")
 print("  Admin    : sichemo@mylife.mku.ac.ke  / Admin@2026")
-print("  Finance  : p.kiprop@sha.go.ke        / Finance@2025")
+print("  Admin    : admin@sha.go.ke           / Admin@2025")
+print("  Finance  : d.achando@sha.go.ke       / Officer@2025")
 print("  Provider : portal@<hospital-slug>.co.ke / Provider@2025  (one per health_providers row)")

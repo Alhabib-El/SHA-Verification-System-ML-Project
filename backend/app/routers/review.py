@@ -49,7 +49,7 @@ def get_review_queue(
         JOIN health_providers p      ON c.provider_id = p.provider_id
         LEFT JOIN verification_results vr ON c.claim_id = vr.claim_id
         WHERE c.status = ANY(:statuses)
-        ORDER BY vr.is_flagged DESC NULLS LAST, c.submission_date DESC
+        ORDER BY c.submission_date DESC
     """), {"statuses": status_list}).fetchall()
     return [dict(r._mapping) for r in rows]
 

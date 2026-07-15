@@ -24,9 +24,9 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
     """), {"email": payload.email}).fetchone()
 
     if not user or not user.is_active:
-        raise HTTPException(401, "Invalid credentials")
+        raise HTTPException(401, "Wrong email address")
     if not verify_password(payload.password, user.password_hash):
-        raise HTTPException(401, "Invalid credentials")
+        raise HTTPException(401, "Wrong password")
 
     db.execute(text(
         "UPDATE system_users SET last_login_at = NOW() WHERE user_id = :uid"),

@@ -8,6 +8,7 @@ FIXES:
     so the app starts even if the model file does not yet exist
 """
 import uuid
+from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -18,6 +19,10 @@ from ..auth import require_role
 
 router = APIRouter(prefix="/claims", tags=["Claims"])
 
+# A claim's service_date must be today — no backdating or forward-dating —
+# enforced server-side (not just in the UI) so it can't be bypassed by
+# calling the API directly.
+
 
 def _get_pipeline():
     """Load the pipeline lazily so startup does not crash if model not trained yet."""
@@ -26,6 +31,21 @@ def _get_pipeline():
         return ClaimsVerificationPipeline()
     except Exception as e:
         return None
+
+
+@router.get("/members")
+def list_members(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_role("provider", "officer", "admin")),
+):
+    """Powers the SHA member no. dropdown on the Submit Claim screen —
+    reads directly from sha_members instead of requiring free-text entry."""
+    rows = db.execute(text("""
+        SELECT sha_member_no, full_name, eligibility_status
+        FROM sha_members
+        ORDER BY full_name
+    """)).fetchall()
+    return [dict(r._mapping) for r in rows]
 
 
 @router.get("/tariffs")
@@ -71,6 +91,9 @@ def submit_claim(
     current_user: dict = Depends(require_role("provider", "admin")),
 ):
     """FR-01: Healthcare provider submits a new claim."""
+    if payload.service_date != date.today():
+        raise HTTPException(400, "Service date must be today's date and cannot be altered")
+
     patient = db.execute(text(
         "SELECT patient_id FROM sha_members WHERE sha_member_no = :no"
     ), {"no": payload.patient_sha_member_no}).fetchone()

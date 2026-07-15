@@ -12,13 +12,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;c
 /* Login */
 .login-wrap{flex:1;display:flex;flex-direction:column;padding:20px 40px}
 .login-box-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
-.login-box{background:#fff;border-radius:12px;padding:32px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.10)}
+.login-box{background:#fff;border:2px solid #e0e0e0;border-radius:12px;padding:32px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,.10)}
 .login-logo{text-align:center;margin-bottom:20px}
 .login-title{font-size:18px;font-weight:600;margin-bottom:4px}
 .login-sub{font-size:12px;color:#888;margin-bottom:24px;text-align:center}
 .login-error{background:#FAECE7;color:#993C1D;border-radius:7px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none}
 .login-footer{display:flex;justify-content:center;border-top:1px solid #e0e0e0;padding-top:14px}
-.login-footer-title{font-size:14px;color:#555;line-height:1.5;max-width:640px;text-align:center}
+.login-footer-title{font-size:14px;color:#1B3B6F;line-height:1.5;max-width:640px;text-align:center}
 /* App */
 .app-wrap{display:none;flex-direction:column;min-height:100vh}
 .topbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.06)}
@@ -31,7 +31,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;background:#f4f6f8;c
 .badge-count{background:#FAECE7;color:#993C1D;border-radius:10px;padding:1px 7px;font-size:10px}
 .main-content{flex:1;padding:20px;max-width:980px;margin:0 auto;width:100%}
 .screen{display:none}.screen.active{display:block}
-.card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .card-title{font-size:13px;font-weight:600;margin-bottom:14px;color:#1a1a2e;display:flex;align-items:center;gap:6px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .form-group{display:flex;flex-direction:column;gap:4px}
@@ -51,13 +51,24 @@ textarea{min-height:70px;resize:vertical}
 .btn-info{background:#1B3B6F;color:#fff;border-color:#1B3B6F}
 .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.metric{background:#f8f9fb;border-radius:8px;padding:12px 14px}
+.metric{background:#f8f9fb;border:2px solid #e0e0e0;border-radius:8px;padding:12px 14px}
 .metric-clickable{cursor:pointer;border:1.5px solid transparent;transition:border-color .15s,background .15s}
 .metric-clickable:hover{background:#f0f2f5}
 .metric-clickable.active{border-color:#189B86;background:#DFF3F1}
 .metric-label{font-size:11px;color:#888;margin-bottom:4px}
 .metric-val{font-size:22px;font-weight:600}
-.metric-val.green{color:#0D6F63}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
+.metric-val.blue{color:#1B3B6F}.metric-val.green{color:#0D6F63}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
+/* Officer Queue tiles: each keeps its own identity color box + number,
+   whether selected as the active filter or not — the active tile just
+   gets a thicker border of that same color instead of switching to teal.
+   (Selector specificity bumped with .metric.metric-clickable so this wins
+   over the screen-wide #screen-queue .metric blue-border rule below.) */
+#tile-pending.metric.metric-clickable{background:#E3E8F0;border-color:#1B3B6F}
+#tile-approved.metric.metric-clickable{background:#DFF3F1;border-color:#0D6F63}
+#tile-flagged.metric.metric-clickable{background:#FAEEDA;border-color:#854F0B}
+#tile-rejected.metric.metric-clickable{background:#FAECE7;border-color:#993C1D}
+#tile-pending.metric.metric-clickable.active, #tile-approved.metric.metric-clickable.active,
+#tile-flagged.metric.metric-clickable.active, #tile-rejected.metric.metric-clickable.active{border-width:3px}
 table.dt{width:100%;border-collapse:collapse;font-size:12px}
 table.dt th{text-align:left;padding:7px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase}
 table.dt td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
@@ -94,7 +105,7 @@ table.dt tr:hover td{background:#fafafa}
 .risk-high{background:#FAECE7;color:#993C1D}.risk-med{background:#FAEEDA;color:#854F0B}.risk-low{background:#DFF3F1;color:#0D6F63}
 .upload-zone{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;color:#888;font-size:12px;cursor:pointer}
 .upload-zone:hover{border-color:#189B86;color:#0D6F63}
-.add-form{background:#f8f9fb;border-radius:8px;padding:14px;margin-top:12px;display:none}
+.add-form{background:#f8f9fb;border:2px solid #e0e0e0;border-radius:8px;padding:14px;margin-top:12px;display:none}
 .suspension-banner{background:#FAECE7;border:1px solid #F0997B;border-left:4px solid #D85A30;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:none;animation:slideDown .3s ease}
 .suspension-banner.visible{display:flex;align-items:flex-start;gap:12px}
 @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
@@ -109,13 +120,37 @@ table.dt tr:hover td{background:#fafafa}
 .conn-banner.visible{display:block}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal-box{background:#fff;border-radius:12px;padding:24px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);animation:modalIn .2s ease}
+.modal-box{background:#fff;border:2px solid #e0e0e0;border-radius:12px;padding:24px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);animation:modalIn .2s ease}
 @keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .modal-title{font-size:15px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .modal-subtitle{font-size:12px;color:#888;margin-bottom:16px}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
-.report-card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.report-card{background:#fff;border:2px solid #e0e0e0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+/* Submit Claim, Officer Queue, Admin/CRUD and Reports get thicker, MKU-blue box borders */
+#screen-submit .card, #screen-queue .card, #screen-queue .metric,
+#screen-admin .card, #screen-admin .add-form,
+#screen-reports .card, #screen-reports .report-card{
+  border-width:3px;border-color:#1B3B6F;
+}
+/* ...but the queue's selected filter tile keeps its teal "active" indicator */
+#screen-queue .metric-clickable.active{border-color:#189B86}
+/* Text inputs/selects/textareas in the same 4 screens match the MKU-blue border */
+#screen-submit input, #screen-submit select, #screen-submit textarea,
+#screen-queue input, #screen-queue select, #screen-queue textarea,
+#screen-admin input, #screen-admin select, #screen-admin textarea,
+#screen-reports input, #screen-reports select, #screen-reports textarea,
+#screen-review textarea{
+  border-color:#1B3B6F;
+}
+/* ...but focus keeps the app's usual teal focus indicator */
+#screen-submit input:focus, #screen-submit select:focus, #screen-submit textarea:focus,
+#screen-queue input:focus, #screen-queue select:focus, #screen-queue textarea:focus,
+#screen-admin input:focus, #screen-admin select:focus, #screen-admin textarea:focus,
+#screen-reports input:focus, #screen-reports select:focus, #screen-reports textarea:focus,
+#screen-review textarea:focus{
+  border-color:#189B86;
+}
 .report-card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}
 .rc-pdf{background:#FAECE7;color:#D85A30}.rc-audit{background:#E3E8F0;color:#1B3B6F}.rc-csv{background:#DFF3F1;color:#0D6F63}
 .dl-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:none;font-family:inherit;font-weight:500}
@@ -130,7 +165,7 @@ table.dt tr:hover td{background:#fafafa}
 .footer-logos{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}
 .footer-logo-item img{height:38px;width:auto;object-fit:contain}
 .footer-divider{width:1px;height:38px;background:#e0e0e0}
-.footer-text{font-size:10px;color:#aaa;text-align:center;line-height:1.5}
+.footer-text{font-size:10px;color:#1B3B6F;text-align:center;line-height:1.5}
 </style>
 </head>
 <body>
@@ -193,8 +228,8 @@ table.dt tr:hover td{background:#fafafa}
       <div style="margin-top:16px;padding:10px;background:#f8f9fb;border-radius:7px;font-size:11px;color:#888">
         <strong>Test accounts:</strong><br>
         Officer: j.mwangi@sha.go.ke / Officer@2025<br>
-        Admin: s.otieno@sha.go.ke / Admin@2025<br>
-        Provider: portal@kenyattanh.go.ke / Provider@2025
+        Admin: admin@sha.go.ke / Admin@2025<br>
+        Provider: portal@cityhospital.co.ke / Provider@2025
       </div>
     </div>
   </div>
@@ -235,7 +270,9 @@ table.dt tr:hover td{background:#fafafa}
         <div class="form-row">
           <div class="form-group">
             <label>SHA member no.</label>
-            <input type="text" id="sha-member-no" placeholder="e.g. SHA-2024-00123">
+            <select id="sha-member-no">
+              <option value="">— select —</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Provider ID</label>
@@ -294,10 +331,10 @@ table.dt tr:hover td{background:#fafafa}
                 style="background:none;border:none;cursor:pointer;color:#993C1D;font-size:18px">×</button>
       </div>
       <div class="metrics" id="queue-metrics">
-        <div class="metric metric-clickable active" id="tile-pending" onclick="filterQueue('pending', this)"><div class="metric-label">Today's claims</div><div class="metric-val" id="m-total">—</div></div>
+        <div class="metric metric-clickable active" id="tile-pending" onclick="filterQueue('pending', this)"><div class="metric-label">Today's claims</div><div class="metric-val blue" id="m-total">—</div></div>
         <div class="metric metric-clickable" id="tile-approved" onclick="filterQueue('approved', this)"><div class="metric-label">Approved</div><div class="metric-val green" id="m-approved">—</div></div>
-        <div class="metric metric-clickable" id="tile-flagged" onclick="filterQueue('flagged', this)"><div class="metric-label">Flagged</div><div class="metric-val red" id="m-flagged">—</div></div>
-        <div class="metric metric-clickable" id="tile-rejected" onclick="filterQueue('rejected', this)"><div class="metric-label">Rejected</div><div class="metric-val amber" id="m-rejected">—</div></div>
+        <div class="metric metric-clickable" id="tile-flagged" onclick="filterQueue('flagged', this)"><div class="metric-label">Flagged</div><div class="metric-val amber" id="m-flagged">—</div></div>
+        <div class="metric metric-clickable" id="tile-rejected" onclick="filterQueue('rejected', this)"><div class="metric-label">Rejected</div><div class="metric-val red" id="m-rejected">—</div></div>
       </div>
       <div class="card">
         <div class="section-head">
@@ -335,7 +372,12 @@ table.dt tr:hover td{background:#fafafa}
           <input type="text" id="prov-search" placeholder="Search by name or ID…" oninput="loadProviders()">
           <select id="county-filter" onchange="loadProviders()">
             <option value="">All counties</option>
-            <option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option>
+            <option>Bomet</option><option>Bungoma</option><option>Busia</option><option>Embu</option>
+            <option>Garissa</option><option>Homa Bay</option><option>Kajiado</option><option>Kakamega</option>
+            <option>Kericho</option><option>Kiambu</option><option>Kilifi</option><option>Kisii</option>
+            <option>Kisumu</option><option>Kitui</option><option>Machakos</option><option>Meru</option>
+            <option>Mombasa</option><option>Nairobi</option><option>Nakuru</option><option>Nyeri</option>
+            <option>Uasin Gishu</option>
           </select>
           <select id="status-filter" onchange="loadProviders()">
             <option value="">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option>
@@ -353,7 +395,14 @@ table.dt tr:hover td{background:#fafafa}
           <div class="form-row">
             <div class="form-group"><label>Provider name</label><input type="text" id="new-name"></div>
             <div class="form-group"><label>County</label>
-              <select id="new-county"><option>Nairobi</option><option>Kisumu</option><option>Mombasa</option><option>Nakuru</option></select>
+              <select id="new-county">
+                <option>Bomet</option><option>Bungoma</option><option>Busia</option><option>Embu</option>
+                <option>Garissa</option><option>Homa Bay</option><option>Kajiado</option><option>Kakamega</option>
+                <option>Kericho</option><option>Kiambu</option><option>Kilifi</option><option>Kisii</option>
+                <option>Kisumu</option><option>Kitui</option><option>Machakos</option><option>Meru</option>
+                <option>Mombasa</option><option>Nairobi</option><option>Nakuru</option><option>Nyeri</option>
+                <option>Uasin Gishu</option>
+              </select>
             </div>
           </div>
           <div class="form-row">
@@ -601,7 +650,14 @@ function showApp() {
   const monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
   document.getElementById('rpt-start').value = monthAgo;
   document.getElementById('rpt-end').value   = today;
+  // Service date on Submit Claim is locked to today — no backdating or
+  // forward-dating — mirrors the server-side check in claims.py.
+  const svcDateInput = document.getElementById('service-date');
+  svcDateInput.value = today;
+  svcDateInput.disabled = true;
+  svcDateInput.style.background = '#f4f6f8';
   populateTariffDropdowns();
+  populateMemberDropdown();
   // Load first active screen
   const firstActive = document.querySelector('.nav-tab:not([style*="none"])');
   if (firstActive) firstActive.click();
@@ -705,6 +761,18 @@ function onDiagnosisChange() {
   loadTariff();
 }
 
+// Populates the SHA member no. dropdown from sha_members instead of
+// requiring free-text entry. Called once after login.
+async function populateMemberDropdown() {
+  try {
+    const rows = await api('GET', '/claims/members');
+    const memberSel = document.getElementById('sha-member-no');
+    memberSel.innerHTML = '<option value="">— select —</option>' + (rows || []).map(m =>
+      `<option value="${m.sha_member_no}">${m.sha_member_no} — ${m.full_name}${m.eligibility_status !== 'active' ? ' (inactive)' : ''}</option>`
+    ).join('');
+  } catch(e) { /* dropdown stays empty except the placeholder */ }
+}
+
 let currentTariff = null;
 async function loadTariff() {
   const d = document.getElementById('diag-code').value;
@@ -789,11 +857,13 @@ async function submitClaim() {
 }
 
 function resetSubmit() {
-  ['sha-member-no','service-date','claimed-amount'].forEach(id => document.getElementById(id).value='');
+  ['sha-member-no','claimed-amount'].forEach(id => document.getElementById(id).value='');
   // Provider ID is only cleared if it's a free-typed field (admin); a
   // provider login's auto-linked/disabled value must survive a reset.
   const provIdInput = document.getElementById('submit-provider-id');
   provIdInput.value = provIdInput.disabled ? providerId : '';
+  // Service date is always locked to today, reset or not.
+  document.getElementById('service-date').value = new Date().toISOString().split('T')[0];
   ['diag-code','proc-code'].forEach(id => document.getElementById(id).value='');
   document.getElementById('tariff-display').value='';
   ['tariff-hint','ratio-display'].forEach(id => document.getElementById(id).innerHTML='');
