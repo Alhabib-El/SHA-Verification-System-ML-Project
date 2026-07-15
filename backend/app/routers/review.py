@@ -5,6 +5,7 @@ FR-05,06,07,09 — flagged claims queue, SHAP display, officer decisions.
 FIX: admin role added alongside officer so admins can review during testing.
 """
 import uuid
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -15,17 +16,29 @@ from ..auth import require_role
 
 router = APIRouter(prefix="/review", tags=["Officer Review"])
 
+VALID_STATUSES = {
+    "submitted", "verified", "flagged", "under_review",
+    "approved", "rejected", "rejected_precheck", "payment_queued", "paid",
+}
+PENDING_STATUSES = ("submitted", "verified", "flagged", "under_review")
+
 
 @router.get("/queue")
 def get_review_queue(
+    status: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role("officer", "admin")),  # FIXED: added admin
 ):
     """
-    Everything a provider has submitted that isn't yet at a terminal status —
-    not just ML-flagged claims — so officers (and admins, who share this same
-    screen) can see and act on every pending submission.
+    Defaults to everything a provider has submitted that isn't yet at a
+    terminal status — not just ML-flagged claims. Pass ?status=approved (or
+    rejected/flagged/etc.) to instead list claims already at that status, so
+    the queue screen can show "what happened" as well as "what's pending".
     """
+    if status and status not in VALID_STATUSES:
+        raise HTTPException(400, f"Invalid status filter: {status}")
+    status_list = [status] if status else list(PENDING_STATUSES)
+
     rows = db.execute(text("""
         SELECT
             c.claim_id, c.submission_date, c.status,
@@ -35,9 +48,9 @@ def get_review_queue(
         FROM claims c
         JOIN health_providers p      ON c.provider_id = p.provider_id
         LEFT JOIN verification_results vr ON c.claim_id = vr.claim_id
-        WHERE c.status IN ('submitted', 'verified', 'flagged', 'under_review')
+        WHERE c.status = ANY(:statuses)
         ORDER BY vr.is_flagged DESC NULLS LAST, c.submission_date DESC
-    """)).fetchall()
+    """), {"statuses": status_list}).fetchall()
     return [dict(r._mapping) for r in rows]
 
 
@@ -73,7 +86,24 @@ def get_claim_for_review(
     """), {"lid": f"LOG-{uuid.uuid4().hex[:10].upper()}",
            "cid": claim_id, "oid": current_user["sub"]})
     db.commit()
-    return dict(row._mapping)
+
+    result = dict(row._mapping)
+
+    # If this claim already has a decision (approved/rejected/escalated/
+    # suspended), surface it so the review screen can show "what happened"
+    # instead of re-prompting for a decision that was already made.
+    decision = db.execute(text("""
+        SELECT al.action, al.officer_comments, al.action_timestamp,
+               su.full_name AS officer_name
+        FROM audit_log al
+        LEFT JOIN system_users su ON su.user_id = al.officer_id
+        WHERE al.claim_id = :cid AND al.action IN ('approved', 'rejected', 'escalated', 'suspended')
+        ORDER BY al.action_timestamp DESC LIMIT 1
+    """), {"cid": claim_id}).fetchone()
+    if decision:
+        result["decision"] = dict(decision._mapping)
+
+    return result
 
 
 @router.post("/decide")

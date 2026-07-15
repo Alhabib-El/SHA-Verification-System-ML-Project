@@ -52,6 +52,9 @@ textarea{min-height:70px;resize:vertical}
 .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .metric{background:#f8f9fb;border-radius:8px;padding:12px 14px}
+.metric-clickable{cursor:pointer;border:1.5px solid transparent;transition:border-color .15s,background .15s}
+.metric-clickable:hover{background:#f0f2f5}
+.metric-clickable.active{border-color:#189B86;background:#DFF3F1}
 .metric-label{font-size:11px;color:#888;margin-bottom:4px}
 .metric-val{font-size:22px;font-weight:600}
 .metric-val.green{color:#0D6F63}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
@@ -291,25 +294,25 @@ table.dt tr:hover td{background:#fafafa}
                 style="background:none;border:none;cursor:pointer;color:#993C1D;font-size:18px">×</button>
       </div>
       <div class="metrics" id="queue-metrics">
-        <div class="metric"><div class="metric-label">Today's claims</div><div class="metric-val" id="m-total">—</div></div>
-        <div class="metric"><div class="metric-label">Approved</div><div class="metric-val green" id="m-approved">—</div></div>
-        <div class="metric"><div class="metric-label">Flagged</div><div class="metric-val red" id="m-flagged">—</div></div>
-        <div class="metric"><div class="metric-label">Rejected</div><div class="metric-val amber" id="m-rejected">—</div></div>
+        <div class="metric metric-clickable active" id="tile-pending" onclick="filterQueue('pending', this)"><div class="metric-label">Today's claims</div><div class="metric-val" id="m-total">—</div></div>
+        <div class="metric metric-clickable" id="tile-approved" onclick="filterQueue('approved', this)"><div class="metric-label">Approved</div><div class="metric-val green" id="m-approved">—</div></div>
+        <div class="metric metric-clickable" id="tile-flagged" onclick="filterQueue('flagged', this)"><div class="metric-label">Flagged</div><div class="metric-val red" id="m-flagged">—</div></div>
+        <div class="metric metric-clickable" id="tile-rejected" onclick="filterQueue('rejected', this)"><div class="metric-label">Rejected</div><div class="metric-val amber" id="m-rejected">—</div></div>
       </div>
       <div class="card">
         <div class="section-head">
-          <div class="card-title" style="margin:0"><i class="ti ti-alert-triangle"></i>Flagged claims awaiting review</div>
-          <button class="btn" onclick="loadQueue()" style="font-size:12px"><i class="ti ti-refresh"></i>Refresh</button>
+          <div class="card-title" style="margin:0"><i class="ti ti-alert-triangle"></i><span id="queue-title">Pending claims awaiting review</span></div>
+          <button class="btn" onclick="loadQueue(currentQueueFilter)" style="font-size:12px"><i class="ti ti-refresh"></i>Refresh</button>
         </div>
         <div class="error-msg" id="queue-error"></div>
-        <div id="queue-loading" class="loading"><i class="ti ti-loader"></i> Loading flagged claims...</div>
+        <div id="queue-loading" class="loading"><i class="ti ti-loader"></i> Loading claims...</div>
         <table class="dt" id="queue-table" style="display:none">
           <thead><tr><th>Claim ID</th><th>Provider</th><th>County</th><th>Amount (KES)</th><th>XGBoost Score</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="queue-tbody"></tbody>
         </table>
         <div id="queue-empty" style="display:none;text-align:center;padding:30px;color:#aaa;font-size:13px">
           <i class="ti ti-circle-check" style="font-size:24px;display:block;margin-bottom:8px;color:#189B86"></i>
-          No flagged claims awaiting review
+          <span id="queue-empty-msg">No claims found</span>
         </div>
       </div>
     </div>
@@ -609,7 +612,12 @@ function showScreen(name, btn) {
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
   if(btn) btn.classList.add('active');
-  if (name === 'queue')   { loadMetrics(); loadQueue(); }
+  if (name === 'queue')   {
+    loadMetrics();
+    document.querySelectorAll('.metric-clickable').forEach(t => t.classList.remove('active'));
+    document.getElementById('tile-pending').classList.add('active');
+    loadQueue('pending');
+  }
   if (name === 'admin')   { loadProviders(); loadUsers(); }
   if (name === 'reports') loadReportsData();
 }
@@ -830,15 +838,34 @@ function showSuspensionToast(provName, flagCount) {
   setTimeout(()=>t.classList.remove('visible'), 6000);
 }
 
-async function loadQueue() {
+let currentQueueFilter = 'pending';
+const QUEUE_FILTER_META = {
+  pending:  {title: 'Pending claims awaiting review', empty: 'No claims found', apiStatus: null},
+  approved: {title: 'Approved claims',                empty: 'No approved claims yet', apiStatus: 'approved'},
+  flagged:  {title: 'Flagged claims',                 empty: 'No flagged claims', apiStatus: 'flagged'},
+  rejected: {title: 'Rejected claims',                empty: 'No rejected claims yet', apiStatus: 'rejected'},
+};
+
+function filterQueue(filter, tileEl) {
+  currentQueueFilter = filter;
+  document.querySelectorAll('.metric-clickable').forEach(t => t.classList.remove('active'));
+  if (tileEl) tileEl.classList.add('active');
+  loadQueue(filter);
+}
+
+async function loadQueue(filter = 'pending') {
   checkSuspensions();
+  const meta = QUEUE_FILTER_META[filter] || QUEUE_FILTER_META.pending;
+  document.getElementById('queue-title').textContent = meta.title;
+  document.getElementById('queue-empty-msg').textContent = meta.empty;
   const loadEl = document.getElementById('queue-loading');
   const tableEl = document.getElementById('queue-table');
   const emptyEl = document.getElementById('queue-empty');
   const errEl   = document.getElementById('queue-error');
   loadEl.style.display='block'; tableEl.style.display='none'; emptyEl.style.display='none'; errEl.style.display='none';
   try {
-    const rows = await api('GET', '/review/queue');
+    const path = meta.apiStatus ? `/review/queue?status=${meta.apiStatus}` : '/review/queue';
+    const rows = await api('GET', path);
     loadEl.style.display='none';
     if (!rows || rows.length===0) { emptyEl.style.display='block'; return; }
     tableEl.style.display='table';
@@ -929,15 +956,25 @@ async function openReview(claimId) {
         </div>
       </div>
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f0">
-        <label style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px">
-          Officer comments (required)
-        </label>
-        <textarea id="officer-comment" placeholder="Enter your review comments before submitting a decision…" style="margin-top:6px"></textarea>
-        <div class="btn-row" style="margin-top:10px">
-          <button class="btn btn-warn" onclick="submitDecision('escalated')"><i class="ti ti-arrow-up"></i>Escalate</button>
-          <button class="btn btn-danger" onclick="submitDecision('rejected')"><i class="ti ti-x"></i>Reject</button>
-          <button class="btn btn-primary" onclick="submitDecision('approved')"><i class="ti ti-check"></i>Approve</button>
-        </div>
+        ${d.decision ? `
+          <div class="section-label">Decision</div>
+          <div class="check-row ${d.decision.action==='approved'?'ck-ok':d.decision.action==='rejected'?'ck-fail':''}" style="font-weight:600;text-transform:capitalize">
+            <i class="ti ti-${d.decision.action==='approved'?'circle-check':d.decision.action==='rejected'?'circle-x':'arrow-up'}"></i>
+            ${d.decision.action} ${d.decision.officer_name ? 'by ' + d.decision.officer_name : ''}
+            ${d.decision.action_timestamp ? '· ' + new Date(d.decision.action_timestamp).toLocaleString() : ''}
+          </div>
+          <div style="font-size:12px;color:#555;margin-top:6px">${d.decision.officer_comments || ''}</div>
+        ` : `
+          <label style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px">
+            Officer comments (required)
+          </label>
+          <textarea id="officer-comment" placeholder="Enter your review comments before submitting a decision…" style="margin-top:6px"></textarea>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn btn-warn" onclick="submitDecision('escalated')"><i class="ti ti-arrow-up"></i>Escalate</button>
+            <button class="btn btn-danger" onclick="submitDecision('rejected')"><i class="ti ti-x"></i>Reject</button>
+            <button class="btn btn-primary" onclick="submitDecision('approved')"><i class="ti ti-check"></i>Approve</button>
+          </div>
+        `}
       </div>
       <p style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">
         <i class="ti ti-info-circle"></i> Decision and SHAP-viewed status recorded in the audit log
