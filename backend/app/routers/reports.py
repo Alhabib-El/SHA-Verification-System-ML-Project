@@ -10,6 +10,8 @@ from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.orm import Session
 import io
 
+from sqlalchemy import text
+
 from ..database import get_db
 from ..auth import require_role
 from reports.report_generator import ReportGenerator
@@ -20,13 +22,23 @@ router = APIRouter(prefix="/reports", tags=["Reports"])
 @router.get("/dashboard-summary")
 def dashboard_summary(db: Session = Depends(get_db),
                        current_user: dict = Depends(require_role("officer", "admin"))):
-    """Powers the four metric cards on the Officer Dashboard (Figure 5.5):
-    Today's Claims / Auto-verified / Flagged / Avg. Score."""
+    """Powers the metric cards on the Officer Dashboard (Figure 5.5):
+    Today's Claims / Approved / Flagged / Rejected / Verified / Under Review."""
     gen = ReportGenerator(db)
     today_summary = gen._get_daily_summary(date.today(), date.today())
-    if not today_summary:
-        return {"total_claims": 0, "approved_count": 0, "flagged_count": 0, "avg_xgboost_score": 0}
-    return today_summary[0]
+    result = today_summary[0] if today_summary else {
+        "total_claims": 0, "approved_count": 0, "flagged_count": 0, "rejected_count": 0,
+    }
+
+    status_counts = db.execute(text("""
+        SELECT status, COUNT(*) FROM claims
+        WHERE DATE(submission_date) = CURRENT_DATE
+        GROUP BY status
+    """)).fetchall()
+    by_status = {row[0]: row[1] for row in status_counts}
+    result["verified_count"] = by_status.get("verified", 0)
+    result["under_review_count"] = by_status.get("under_review", 0)
+    return result
 
 
 @router.get("/verification-summary.pdf")

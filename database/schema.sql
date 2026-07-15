@@ -203,15 +203,18 @@ ORDER BY vr.xgboost_score DESC;
 
 CREATE OR REPLACE VIEW v_daily_claims_summary AS
 SELECT
-    DATE(submission_date)                                    AS claim_date,
-    COUNT(*)                                                  AS total_claims,
-    COUNT(*) FILTER (WHERE status = 'approved')               AS approved_count,
-    COUNT(*) FILTER (WHERE status IN ('flagged','under_review')) AS flagged_count,
-    COUNT(*) FILTER (WHERE status = 'rejected')               AS rejected_count,
-    ROUND(AVG(claimed_amount), 2)                             AS avg_claimed_amount,
-    SUM(claimed_amount) FILTER (WHERE status = 'approved')    AS total_approved_value
-FROM claims
-GROUP BY DATE(submission_date)
+    DATE(c.submission_date)                                    AS claim_date,
+    COUNT(*)                                                    AS total_claims,
+    COUNT(*) FILTER (WHERE c.status = 'approved')               AS approved_count,
+    COUNT(*) FILTER (WHERE c.status IN ('flagged','under_review')) AS flagged_count,
+    COUNT(*) FILTER (WHERE c.status = 'rejected')               AS rejected_count,
+    ROUND(AVG(c.claimed_amount), 2)                             AS avg_claimed_amount,
+    SUM(c.claimed_amount) FILTER (WHERE c.status = 'approved')  AS total_approved_value,
+    ROUND(AVG(vr.xgboost_score)::numeric, 3)                    AS avg_xgboost_score,
+    ROUND(AVG(c.amount_ratio)::numeric, 2)                      AS avg_amount_ratio
+FROM claims c
+LEFT JOIN verification_results vr ON vr.claim_id = c.claim_id
+GROUP BY DATE(c.submission_date)
 ORDER BY claim_date DESC;
 
 CREATE OR REPLACE VIEW v_provider_risk_summary AS

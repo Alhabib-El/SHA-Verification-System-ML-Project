@@ -50,7 +50,7 @@ textarea{min-height:70px;resize:vertical}
 .btn-warn{background:#BA7517;color:#fff;border-color:#BA7517}
 .btn-info{background:#1B3B6F;color:#fff;border-color:#1B3B6F}
 .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
 .metric{background:#f8f9fb;border:2px solid #e0e0e0;border-radius:8px;padding:12px 14px}
 .metric-clickable{cursor:pointer;border:1.5px solid transparent;transition:border-color .15s,background .15s}
 .metric-clickable:hover{background:#f0f2f5}
@@ -58,6 +58,7 @@ textarea{min-height:70px;resize:vertical}
 .metric-label{font-size:11px;color:#888;margin-bottom:4px}
 .metric-val{font-size:22px;font-weight:600}
 .metric-val.blue{color:#1B3B6F}.metric-val.green{color:#0D6F63}.metric-val.red{color:#993C1D}.metric-val.amber{color:#854F0B}
+.metric-val.indigo{color:#3730A3}.metric-val.violet{color:#6B21A8}
 /* Officer Queue tiles: each keeps its own identity color box + number,
    whether selected as the active filter or not — the active tile just
    gets a thicker border of that same color instead of switching to teal.
@@ -67,8 +68,11 @@ textarea{min-height:70px;resize:vertical}
 #tile-approved.metric.metric-clickable{background:#DFF3F1;border-color:#0D6F63}
 #tile-flagged.metric.metric-clickable{background:#FAEEDA;border-color:#854F0B}
 #tile-rejected.metric.metric-clickable{background:#FAECE7;border-color:#993C1D}
+#tile-verified.metric.metric-clickable{background:#EEF2FF;border-color:#3730A3}
+#tile-under-review.metric.metric-clickable{background:#F3E8FF;border-color:#6B21A8}
 #tile-pending.metric.metric-clickable.active, #tile-approved.metric.metric-clickable.active,
-#tile-flagged.metric.metric-clickable.active, #tile-rejected.metric.metric-clickable.active{border-width:3px}
+#tile-flagged.metric.metric-clickable.active, #tile-rejected.metric.metric-clickable.active,
+#tile-verified.metric.metric-clickable.active, #tile-under-review.metric.metric-clickable.active{border-width:3px}
 table.dt{width:100%;border-collapse:collapse;font-size:12px}
 table.dt th{text-align:left;padding:7px 10px;font-weight:600;color:#888;border-bottom:1px solid #eee;font-size:11px;text-transform:uppercase}
 table.dt td{padding:9px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
@@ -332,7 +336,9 @@ table.dt tr:hover td{background:#fafafa}
       </div>
       <div class="metrics" id="queue-metrics">
         <div class="metric metric-clickable active" id="tile-pending" onclick="filterQueue('pending', this)"><div class="metric-label">Today's claims</div><div class="metric-val blue" id="m-total">—</div></div>
+        <div class="metric metric-clickable" id="tile-verified" onclick="filterQueue('verified', this)"><div class="metric-label">Verified</div><div class="metric-val indigo" id="m-verified">—</div></div>
         <div class="metric metric-clickable" id="tile-approved" onclick="filterQueue('approved', this)"><div class="metric-label">Approved</div><div class="metric-val green" id="m-approved">—</div></div>
+        <div class="metric metric-clickable" id="tile-under-review" onclick="filterQueue('under_review', this)"><div class="metric-label">Under Review</div><div class="metric-val violet" id="m-under-review">—</div></div>
         <div class="metric metric-clickable" id="tile-flagged" onclick="filterQueue('flagged', this)"><div class="metric-label">Flagged</div><div class="metric-val amber" id="m-flagged">—</div></div>
         <div class="metric metric-clickable" id="tile-rejected" onclick="filterQueue('rejected', this)"><div class="metric-label">Rejected</div><div class="metric-val red" id="m-rejected">—</div></div>
       </div>
@@ -877,10 +883,12 @@ async function loadMetrics() {
   try {
     const data = await api('GET', '/reports/dashboard-summary');
     if (!data) return;
-    document.getElementById('m-total').textContent    = data.total_claims    ?? 0;
-    document.getElementById('m-approved').textContent = data.approved_count  ?? 0;
-    document.getElementById('m-flagged').textContent  = data.flagged_count   ?? 0;
-    document.getElementById('m-rejected').textContent = data.rejected_count  ?? 0;
+    document.getElementById('m-total').textContent        = data.total_claims        ?? 0;
+    document.getElementById('m-approved').textContent      = data.approved_count      ?? 0;
+    document.getElementById('m-flagged').textContent       = data.flagged_count       ?? 0;
+    document.getElementById('m-rejected').textContent      = data.rejected_count      ?? 0;
+    document.getElementById('m-verified').textContent      = data.verified_count      ?? 0;
+    document.getElementById('m-under-review').textContent  = data.under_review_count  ?? 0;
   } catch(e) { /* silently fail — metrics are non-critical */ }
 }
 
@@ -911,10 +919,12 @@ function showSuspensionToast(provName, flagCount) {
 
 let currentQueueFilter = 'pending';
 const QUEUE_FILTER_META = {
-  pending:  {title: 'Pending claims awaiting review', empty: 'No claims found', apiStatus: null},
-  approved: {title: 'Approved claims',                empty: 'No approved claims yet', apiStatus: 'approved'},
-  flagged:  {title: 'Flagged claims',                 empty: 'No flagged claims', apiStatus: 'flagged'},
-  rejected: {title: 'Rejected claims',                empty: 'No rejected claims yet', apiStatus: 'rejected'},
+  pending:      {title: 'Pending claims awaiting review', empty: 'No claims found', apiStatus: null},
+  approved:     {title: 'Approved claims',                empty: 'No approved claims yet', apiStatus: 'approved'},
+  flagged:      {title: 'Flagged claims',                 empty: 'No flagged claims', apiStatus: 'flagged'},
+  rejected:     {title: 'Rejected claims',                empty: 'No rejected claims yet', apiStatus: 'rejected'},
+  verified:     {title: 'Verified claims (auto-cleared, awaiting approval)', empty: 'No verified claims yet', apiStatus: 'verified'},
+  under_review: {title: 'Claims escalated for senior review', empty: 'No claims under review', apiStatus: 'under_review'},
 };
 
 function filterQueue(filter, tileEl) {
