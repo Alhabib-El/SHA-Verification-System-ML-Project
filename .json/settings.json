@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(venv/Scripts/python.exe -c ' *)",
+      "Read(//c/Users/Lenovo/AppData/Local/Temp/claude/c--Users-Lenovo-Documents-GitHub-SHA-Verification-System-ML-Project/5d4c55f2-7218-4ed9-9ec4-9e24132c6943/scratchpad/**)",
+      "Bash(docker exec *)",
+      "Bash(venv/Scripts/python.exe generate_demo_claims.py)",
+      "Bash(venv/Scripts/python.exe -c \"import ast; ast.parse\\(open\\('ml_pipeline/pipeline.py'\\).read\\(\\)\\); print\\('syntax OK'\\)\")"
+    ]
+  }
+}

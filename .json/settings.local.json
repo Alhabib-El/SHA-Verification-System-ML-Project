@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec *)",
+      "Bash(cat)",
+      "Bash(docker cp *)",
+      "Bash(MSYS_NO_PATHCONV=1 docker cp /c/Users/Lenovo/AppData/Local/Temp/claude/c--Users-Lenovo-Documents-GitHub-SHA-Verification-System-ML-Project/5d4c55f2-7218-4ed9-9ec4-9e24132c6943/scratchpad/update_tariffs.sql sha-claims-postgres:/tmp/update_tariffs.sql)",
+      "Bash(python -)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec -i sha-claims-postgres psql -U postgres -d schema_test)",
+      "Bash(venv/Scripts/python.exe -c ' *)",
+      "Bash(venv/Scripts/python.exe generate_demo_claims.py)",
+      "Bash(venv/Scripts/python.exe trigger_auto_suspend_demo.py)",
+      "Bash(python -c ' *)"
+    ]
+  }
+}
