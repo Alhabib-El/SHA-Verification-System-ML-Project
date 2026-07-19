@@ -30,6 +30,9 @@ def dashboard_summary(db: Session = Depends(get_db),
         "total_claims": 0, "approved_count": 0, "flagged_count": 0, "rejected_count": 0,
     }
 
+    # v_daily_claims_summary (the view _get_daily_summary reads) only tracks
+    # approved/flagged/rejected, so verified/under_review are counted here
+    # directly to cover the two extra Officer Queue tiles.
     status_counts = db.execute(text("""
         SELECT status, COUNT(*) FROM claims
         WHERE DATE(submission_date) = CURRENT_DATE
@@ -41,6 +44,10 @@ def dashboard_summary(db: Session = Depends(get_db),
     return result
 
 
+# ── DOWNLOADABLE REPORTS (FR-10) ───────────────────────────────────────────────
+# Three export formats for three audiences: a formatted PDF for management,
+# a CSV audit trail for compliance, and a CSV of flagged claims + their SHAP
+# features for anyone analysing the model's behaviour offline.
 @router.get("/verification-summary.pdf")
 def download_verification_summary(
     start_date: date = Query(...),

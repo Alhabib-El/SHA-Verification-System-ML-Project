@@ -22,6 +22,9 @@ DROP TABLE IF EXISTS health_providers CASCADE;
 DROP TABLE IF EXISTS system_users CASCADE;
 
 -- ── 1. system_users ───────────────────────────────────────────────────────────
+-- Every human (or automated) account that can log into the system: SHA
+-- officers, admins, finance staff, and one login per health provider
+-- (role='provider', linked via provider_id) for submitting claims.
 CREATE TABLE system_users (
     user_id         VARCHAR(20)  PRIMARY KEY,
     full_name       VARCHAR(150) NOT NULL,
@@ -36,6 +39,9 @@ CREATE TABLE system_users (
 );
 
 -- ── 2. health_providers ───────────────────────────────────────────────────────
+-- The hospitals/clinics/pharmacies/labs accredited to bill SHA. risk_tier
+-- and status are what the auto-suspension logic (ml_pipeline/auto_suspend.py)
+-- writes to when a provider crosses the flagged-claims threshold.
 CREATE TABLE health_providers (
     provider_id          VARCHAR(20)  PRIMARY KEY,
     name                 VARCHAR(150) NOT NULL,
@@ -61,6 +67,9 @@ CREATE INDEX idx_providers_county ON health_providers(county);
 CREATE INDEX idx_providers_status ON health_providers(status);
 
 -- ── 3. sha_members ────────────────────────────────────────────────────────────
+-- The insured patients (SHA beneficiaries) that claims are filed on behalf
+-- of. eligibility_status/eligibility_expiry are checked in Stage 1 of the
+-- verification pipeline before a claim is allowed to proceed to ML scoring.
 CREATE TABLE sha_members (
     patient_id          VARCHAR(20)  PRIMARY KEY,
     national_id         VARCHAR(20)  UNIQUE NOT NULL,
@@ -83,6 +92,11 @@ CREATE INDEX idx_members_sha_no      ON sha_members(sha_member_no);
 CREATE INDEX idx_members_eligibility ON sha_members(eligibility_status);
 
 -- ── 4. sha_tariffs ────────────────────────────────────────────────────────────
+-- The official approved-amount schedule: for a given diagnosis + procedure
+-- + facility tier, this is the maximum SHA will reimburse. This table is
+-- the single source of truth for two separate checks — "is this a valid
+-- diagnosis/procedure pairing at all" (check_clinical_match) and "is the
+-- claimed amount reasonable" (amount_ratio, billing_compliant).
 CREATE TABLE sha_tariffs (
     tariff_id        VARCHAR(20)   PRIMARY KEY,
     diagnosis_code   VARCHAR(10)   NOT NULL,
@@ -98,6 +112,11 @@ CREATE TABLE sha_tariffs (
 CREATE INDEX idx_tariffs_lookup ON sha_tariffs(diagnosis_code, procedure_code, facility_tier);
 
 -- ── 5. claims ─────────────────────────────────────────────────────────────────
+-- The central table: one row per insurance claim filed by a provider.
+-- amount_ratio and submission_delay_days are GENERATED columns — Postgres
+-- computes and stores them automatically from the other columns on every
+-- insert/update, so the application code never has to keep them in sync
+-- by hand, and they're always consistent even if a claim is edited directly.
 CREATE TABLE claims (
     claim_id              VARCHAR(20)   PRIMARY KEY,
     patient_id            VARCHAR(20)   NOT NULL REFERENCES sha_members(patient_id),
@@ -108,11 +127,15 @@ CREATE TABLE claims (
     procedure_code        VARCHAR(10)   NOT NULL,
     claimed_amount        DECIMAL(12,2) NOT NULL CHECK (claimed_amount > 0),
     sha_tariff_amount     DECIMAL(12,2),
+    -- claimed / approved — the single strongest fraud signal the model
+    -- uses (fed into the ML feature vector as "amount_ratio").
     amount_ratio          DECIMAL(8,4)  GENERATED ALWAYS AS (
                               CASE WHEN sha_tariff_amount > 0
                               THEN claimed_amount / sha_tariff_amount
                               ELSE NULL END
                           ) STORED,
+    -- Days between the service being rendered and the claim being filed —
+    -- an unusually long delay is itself a feature the model looks at.
     submission_delay_days INTEGER       GENERATED ALWAYS AS (
                               EXTRACT(DAY FROM submission_date - service_date)::INTEGER
                           ) STORED,
@@ -142,6 +165,11 @@ CREATE TRIGGER claims_updated_at
     FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
 
 -- ── 6. verification_results ───────────────────────────────────────────────────
+-- One row per claim, written by ClaimsVerificationPipeline._persist_result
+-- once it's been through all 6 pipeline stages: the four rule-based
+-- pre-check booleans, the model's xgboost_score, and shap_values/
+-- top_features (the SHAP explanation) so an officer can see WHY a claim
+-- was flagged, not just that it was.
 CREATE TABLE verification_results (
     result_id             VARCHAR(20)  PRIMARY KEY,
     claim_id              VARCHAR(20)  UNIQUE NOT NULL REFERENCES claims(claim_id),
@@ -164,6 +192,11 @@ CREATE INDEX idx_verif_flagged ON verification_results(is_flagged);
 CREATE INDEX idx_verif_score   ON verification_results(xgboost_score);
 
 -- ── 7. audit_log ──────────────────────────────────────────────────────────────
+-- FR-09: an append-only trail of every decision made on a claim or provider
+-- — officer approvals/rejections, escalations, automated suspensions, even
+-- just viewing a claim's SHAP breakdown. REVOKE below enforces "append-only"
+-- at the database level, not just by convention in application code, so
+-- history genuinely cannot be rewritten even by a compromised app server.
 CREATE TABLE audit_log (
     log_id           VARCHAR(20)  PRIMARY KEY,
     claim_id         VARCHAR(20)  REFERENCES claims(claim_id),
@@ -188,6 +221,13 @@ CREATE INDEX idx_audit_timestamp ON audit_log(action_timestamp);
 REVOKE UPDATE, DELETE ON audit_log FROM PUBLIC;
 
 -- ── VIEWS ─────────────────────────────────────────────────────────────────────
+-- Pre-joined, reusable read models so the API routers issue one simple
+-- SELECT instead of repeating the same multi-table JOIN logic everywhere.
+
+-- All currently-flagged, still-pending claims, worst score first — this is
+-- the original "flagged only" queue definition (superseded in the live app
+-- by review.py's broader query, kept here as it still documents the
+-- pattern and is used by earlier report logic).
 CREATE OR REPLACE VIEW v_flagged_claims_queue AS
 SELECT
     c.claim_id, c.submission_date,
@@ -201,6 +241,9 @@ WHERE vr.is_flagged = TRUE
   AND c.status IN ('flagged','under_review')
 ORDER BY vr.xgboost_score DESC;
 
+-- One row per calendar day: claim counts by outcome plus average model
+-- score/amount-ratio for that day. Powers both the Officer Dashboard
+-- metric cards and the PDF verification summary report.
 CREATE OR REPLACE VIEW v_daily_claims_summary AS
 SELECT
     DATE(c.submission_date)                                    AS claim_date,
@@ -217,6 +260,9 @@ LEFT JOIN verification_results vr ON vr.claim_id = c.claim_id
 GROUP BY DATE(c.submission_date)
 ORDER BY claim_date DESC;
 
+-- Per-provider rollup of total vs flagged claims and average risk score —
+-- the data source for the Admin CRUD screen's provider risk column and
+-- the Reports screen's "Provider flag rate" chart.
 CREATE OR REPLACE VIEW v_provider_risk_summary AS
 SELECT
     p.provider_id, p.name, p.county, p.status, p.risk_tier,

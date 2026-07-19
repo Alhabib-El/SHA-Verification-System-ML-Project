@@ -31,6 +31,10 @@ class ClaimsVerificationPipeline:
         self.shap_explainer = SHAPExplainer(self.model)
 
     # ── STAGE 1: Rule-based pre-checks ──────────────────────────────────────
+    # Cheap, deterministic checks that run BEFORE the ML model — no point
+    # spending an inference call on a claim that fails basic eligibility,
+    # provider-accreditation, or tariff-coverage rules. Mirrors how a real
+    # claims officer would triage: reject the obviously invalid ones first.
     def _run_prechecks(self, db: Session, claim: dict) -> dict:
         member = db.execute(text("""
             SELECT eligibility_status, eligibility_expiry, coverage_package
@@ -95,7 +99,9 @@ class ClaimsVerificationPipeline:
 
         if not (prechecks["eligibility_check"] and prechecks["provider_check"]
                 and prechecks["coverage_check"]):
-            # Claim fails basic verification — reject without ML inference
+            # Fails a hard rule (inactive member, unaccredited provider, or no
+            # matching tariff) — rejected outright. The ML model is never
+            # invoked for these; there's nothing for it to add an opinion on.
             return self._persist_result(
                 db, claim_id,
                 provider_id=claim["provider_id"],
@@ -112,20 +118,36 @@ class ClaimsVerificationPipeline:
         tariff_amount = prechecks["tariff_amount"]
 
         # ── STAGE 2 + 3: Preprocessing + Feature Engineering ────────────────
+        # Turns the raw claim + provider rows into the fixed 17-value numeric
+        # vector the model was trained on (see feature_engineering.py).
         feature_vector = build_feature_vector(db, claim, provider, tariff_amount)
 
         from .feature_engineering import check_clinical_match
         clinical_match = check_clinical_match(db, claim["diagnosis_code"], claim["procedure_code"])
+        # "Billing compliant" = claimed amount is within 20% of the approved
+        # tariff — a simple, explainable rule kept separate from the ML
+        # score so officers can see it as its own audit fact, not just a
+        # number baked into the model's prediction.
         billing_compliant = (float(claim["claimed_amount"]) / tariff_amount) <= 1.20 if tariff_amount else False
 
         # ── STAGE 4: XGBoost Inference ───────────────────────────────────
+        # predict_proba returns [P(valid), P(invalid)] — we only need the
+        # second column: the model's estimated probability this claim is
+        # fraudulent/anomalous, in [0, 1].
         xgboost_score = float(self.model.predict_proba(feature_vector)[0][1])
 
         # ── STAGE 5: SHAP Explanation ────────────────────────────────────
+        # SHAP (SHapley Additive exPlanations) breaks the single xgboost_score
+        # back down into a per-feature contribution, so an officer reviewing
+        # a flagged claim can see WHY the model flagged it (e.g. "amount_ratio
+        # pushed the score up") instead of trusting an opaque black box.
         top_features = self.shap_explainer.explain(feature_vector, top_n=5)
         shap_raw = self.shap_explainer.get_raw_shap_dict(feature_vector)
 
         # ── STAGE 6: Result Assembly ─────────────────────────────────────
+        # Threshold is intentionally a module constant (not hardcoded here)
+        # so it can be tuned as more real-world data comes in without
+        # touching the decision logic itself.
         is_flagged = xgboost_score > DEFAULT_FLAG_THRESHOLD
         claim_status = "flagged" if is_flagged else "verified"
 
@@ -140,6 +162,13 @@ class ClaimsVerificationPipeline:
         )
 
     def _persist_result(self, db: Session, claim_id: str, **kwargs) -> dict:
+        """
+        Writes the verification outcome to verification_results, updates the
+        claim's status, and — critically — runs the auto-suspension check
+        (FR-09) so a provider that has crossed the 10-flags/30-days threshold
+        is suspended automatically as part of the same transaction, not as
+        a separate manual step an admin has to remember to do.
+        """
         result_id = f"RES-{uuid.uuid4().hex[:10].upper()}"
         claim_status = kwargs.pop("claim_status")
         provider_id = kwargs.pop("provider_id")

@@ -93,8 +93,20 @@ def update_provider(provider_id: str, payload: ProviderUpdateRequest,
 @router.delete("/providers/{provider_id}", status_code=204)
 def delete_provider(provider_id: str, db: Session = Depends(get_db),
                      current_user: dict = Depends(require_role("admin"))):
-    db.execute(text("DELETE FROM health_providers WHERE provider_id = :pid"),
-               {"pid": provider_id})
+    """
+    Soft-delete only: sets status to 'revoked' rather than removing the
+    row. A hard DELETE isn't actually possible here even if attempted —
+    sha_app_user has no DELETE grant on health_providers (see
+    database/permissions.sql) — and a real DELETE would be wrong anyway:
+    it would break every historical claim's foreign key to this provider
+    and erase them from past audit trail/report data. 'revoked' keeps the
+    provider permanently out of the active accreditation list while
+    preserving history, the same pattern system_users uses (is_active
+    instead of deletion).
+    """
+    db.execute(text(
+        "UPDATE health_providers SET status = 'revoked' WHERE provider_id = :pid"),
+        {"pid": provider_id})
     db.commit()
 
 
@@ -122,7 +134,9 @@ def list_users(db: Session = Depends(get_db),
 def create_user(payload: UserCreateRequest, db: Session = Depends(get_db),
                  current_user: dict = Depends(require_role("admin"))):
     """Lets an admin create any staff account — including granting admin
-    rights to a new user — not just provider portal logins."""
+    rights to a new user — not just provider portal logins. Password is
+    bcrypt-hashed (auth.py:hash_password) before it ever touches the
+    database; the plaintext from the request is never stored or logged."""
     existing = db.execute(text(
         "SELECT 1 FROM system_users WHERE email = :email"),
         {"email": payload.email}).fetchone()
@@ -156,6 +170,9 @@ def update_user(user_id: str, payload: UserUpdateRequest,
     updates = payload.dict(exclude_none=True)
     if not updates:
         raise HTTPException(400, "No fields to update")
+    # Self-lockout guard: without this, an admin could deactivate their own
+    # account or demote themselves out of the admin role and then have no
+    # way back in (system_users has no "recover access" flow).
     if user_id == current_user["sub"] and updates.get("is_active") is False:
         raise HTTPException(400, "You cannot deactivate your own account")
     if user_id == current_user["sub"] and updates.get("role") not in (None, "admin"):

@@ -20,9 +20,12 @@ VALID_STATUSES = {
     "submitted", "verified", "flagged", "under_review",
     "approved", "rejected", "rejected_precheck", "payment_queued", "paid",
 }
+# The four "still needs a human decision" statuses — the Officer Queue's
+# default view (no ?status filter) shows exactly this set.
 PENDING_STATUSES = ("submitted", "verified", "flagged", "under_review")
 
 
+# ── OFFICER QUEUE (FR-05) ──────────────────────────────────────────────────────
 @router.get("/queue")
 def get_review_queue(
     status: Optional[str] = None,
@@ -54,12 +57,22 @@ def get_review_queue(
     return [dict(r._mapping) for r in rows]
 
 
+# ── SINGLE CLAIM DETAIL (FR-06/07): pre-check results + SHAP breakdown ────────
 @router.get("/{claim_id}")
 def get_claim_for_review(
     claim_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role("officer", "admin")),  # FIXED: added admin
 ):
+    """
+    Everything an officer needs to decide on one claim: the claim itself,
+    the four rule-based pre-check results, the ML score + top SHAP feature
+    contributions (why the model scored it that way), and — if it was
+    already decided before — that prior decision, so re-opening a claim
+    shows the outcome instead of re-prompting for a new one.
+    Also writes a 'viewed' audit_log entry (FR-09 traceability: proves an
+    officer actually opened and looked at the SHAP explanation).
+    """
     row = db.execute(text("""
         SELECT c.claim_id, c.diagnosis_code, c.procedure_code,
                c.claimed_amount, c.sha_tariff_amount, c.amount_ratio, c.status,
@@ -106,12 +119,20 @@ def get_claim_for_review(
     return result
 
 
+# ── OFFICER DECISION (FR-06/09) ────────────────────────────────────────────────
 @router.post("/decide")
 def submit_decision(
     payload: OfficerDecisionRequest,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role("officer", "admin")),  # FIXED: added admin
 ):
+    """
+    Records an officer's final call on a claim — approve, reject, or
+    escalate (which maps to status 'under_review' for senior/second-level
+    review). Every decision is written to the append-only audit_log with
+    the officer's ID, their comments, and the before/after status, so the
+    decision trail is fully reconstructable later (FR-09).
+    """
     claim = db.execute(text("SELECT status FROM claims WHERE claim_id = :cid"),
                         {"cid": payload.claim_id}).fetchone()
     if not claim:

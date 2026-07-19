@@ -1,6 +1,13 @@
 -- ============================================================================
 -- SHA CLAIMS VERIFICATION SYSTEM — ROLE PERMISSIONS
 -- Implements Section 5.6.2: append-only audit log, least-privilege access
+--
+-- Note the pattern throughout: sha_app_user (what the FastAPI backend
+-- connects as) is NEVER granted DELETE on anything. Even the admin CRUD
+-- "delete provider" feature in the app relies only on SELECT/INSERT/UPDATE.
+-- This means even a fully compromised backend/API key cannot destroy
+-- historical data — genuine deletions require connecting as the database
+-- superuser directly, outside the application entirely.
 -- ============================================================================
 
 -- Application database role (used by the FastAPI backend connection pool)

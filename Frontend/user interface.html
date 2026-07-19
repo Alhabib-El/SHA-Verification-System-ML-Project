@@ -982,9 +982,17 @@ async function openReview(claimId) {
   el.innerHTML = '<div class="loading"><i class="ti ti-loader"></i> Loading claim details...</div>';
   try {
     const d = await api('GET', `/review/${claimId}`);
+    // top_features is the SHAP explanation (see shap_explainer.py): each
+    // entry is one of the 17 model inputs plus how much it pushed the
+    // score up (fraud-like) or down (looks legitimate). This is what
+    // actually answers "why was this claim flagged?" for the officer.
     const features = Array.isArray(d.top_features) ? d.top_features : [];
     const shapHtml = features.length
       ? features.map(f => {
+          // Bar width is the SHAP value scaled against an empirically
+          // observed "large" contribution (~0.34) so the most influential
+          // features visually fill the bar — purely a display scale, not
+          // a percentage of anything.
           const w = Math.round(Math.abs(f.value)/0.34*100);
           const col = f.direction==='up'?'#D85A30':'#189B86';
           const dir = f.direction==='up'?'▲':'▼';
@@ -1110,10 +1118,15 @@ async function loadProviders() {
       const riskCol = p.risk_tier==='high'?'#D85A30':p.risk_tier==='medium'?'#BA7517':'#189B86';
       const flags = flagsById[p.provider_id] || 0;
       const pct = Math.round(flags/10*100);
+      // 'revoked' is a permanent admin decision (from the delete-provider
+      // action) — unlike 'suspended' (auto-suspension), it is not
+      // reinstatable through this flow, so no action button is shown.
       const actions = p.status==='active'
         ? `<button class="act-btn act-del" onclick="suspendProvider('${p.provider_id}','${p.name}')"><i class="ti ti-shield-off"></i>Suspend</button>
            <button class="act-btn act-del" onclick="deleteProvider('${p.provider_id}')" style="margin-left:4px"><i class="ti ti-trash"></i></button>`
-        : `<button class="act-btn act-edit" onclick="openReinstate('${p.provider_id}','${p.name}')"><i class="ti ti-shield-check"></i>Reinstate</button>`;
+        : p.status==='suspended'
+        ? `<button class="act-btn act-edit" onclick="openReinstate('${p.provider_id}','${p.name}')"><i class="ti ti-shield-check"></i>Reinstate</button>`
+        : `<span style="font-size:11px;color:#aaa">Revoked</span>`;
       return `<tr>
         <td style="font-family:monospace;font-size:11px">${p.provider_id}</td>
         <td>${p.name}</td><td>${p.county}</td><td>${p.facility_type}</td>
@@ -1144,10 +1157,12 @@ async function suspendProvider(id, name) {
 }
 
 async function deleteProvider(id) {
-  if (!confirm('Delete this provider? This cannot be undone.')) return;
+  // Soft-delete: the backend sets status='revoked' rather than removing
+  // the row, so past claims/audit history for this provider stay intact.
+  if (!confirm('Revoke this provider\'s accreditation? It will be permanently removed from the active list.')) return;
   try {
     await api('DELETE', `/admin/providers/${id}`);
-    toast('Provider deleted', '#993C1D');
+    toast('Provider revoked', '#993C1D');
     loadProviders();
   } catch(e) { toast('Failed: '+e.message,'#993C1D'); }
 }

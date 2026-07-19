@@ -25,13 +25,20 @@ router = APIRouter(prefix="/claims", tags=["Claims"])
 
 
 def _get_pipeline():
-    """Load the pipeline lazily so startup does not crash if model not trained yet."""
+    """Load the pipeline lazily so startup does not crash if model not trained yet.
+    Keeps the API usable (submission still works, just without ML scoring)
+    even before the first training run has produced a .joblib artifact."""
     try:
         from ml_pipeline.pipeline import ClaimsVerificationPipeline
         return ClaimsVerificationPipeline()
     except Exception as e:
         return None
 
+
+# ── FORM-POPULATING LOOKUPS ───────────────────────────────────────────────────
+# These two endpoints exist purely so the Submit Claim screen's dropdowns are
+# always driven by live database content instead of a hardcoded list that
+# would silently go stale every time an admin adds a member or tariff.
 
 @router.get("/members")
 def list_members(
@@ -84,13 +91,27 @@ def lookup_tariff(
     return {"approved_amount": float(tariff.approved_amount)}
 
 
+# ── CLAIM SUBMISSION (FR-01) ──────────────────────────────────────────────────
 @router.post("/submit", status_code=201)
 def submit_claim(
     payload: ClaimSubmitRequest,
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_role("provider", "admin")),
 ):
-    """FR-01: Healthcare provider submits a new claim."""
+    """
+    FR-01: Healthcare provider submits a new claim. End-to-end flow:
+      1. Reject if service_date isn't exactly today (anti-backdating rule).
+      2. Resolve the SHA member number to a patient_id.
+      3. Look up the current approved tariff for this diagnosis/procedure
+         pair, to store alongside the claim as sha_tariff_amount.
+      4. Insert the claim (status defaults to 'submitted').
+      5. Immediately run it through the ML verification pipeline (Stage 1-6,
+         see ml_pipeline/pipeline.py) so the provider gets an instant
+         verified/flagged/rejected outcome rather than waiting for an
+         officer to pick it up manually.
+      6. Return the claim plus its verification outcome (if the pipeline
+         produced one) in a single response.
+    """
     if payload.service_date != date.today():
         raise HTTPException(400, "Service date must be today's date and cannot be altered")
 
@@ -130,7 +151,9 @@ def submit_claim(
         try:
             pipeline.verify(db, claim_id)
         except Exception as e:
-            # Log but do not crash — claim is saved, pipeline failed gracefully
+            # Log but do not crash — claim is saved, pipeline failed gracefully.
+            # A provider's submission should never be lost just because, say,
+            # the model file is temporarily unavailable.
             print(f"[PIPELINE WARNING] {claim_id}: {e}")
 
     claim = db.execute(text("SELECT * FROM claims WHERE claim_id = :cid"),
@@ -147,6 +170,7 @@ def submit_claim(
     return result
 
 
+# ── STATUS TRACKING & LISTING ─────────────────────────────────────────────────
 @router.get("/{claim_id}/status")
 def get_claim_status(
     claim_id: str,

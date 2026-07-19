@@ -13,15 +13,21 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-FLAG_THRESHOLD      = 10
-ROLLING_WINDOW_DAYS = 30
-SYSTEM_OFFICER_ID   = "USR-SYSTEM"
+FLAG_THRESHOLD      = 10   # flagged claims within the rolling window before auto-suspension
+ROLLING_WINDOW_DAYS = 30   # matches SHA's provider-monitoring policy period
+SYSTEM_OFFICER_ID   = "USR-SYSTEM"   # deactivated placeholder account (never logs in) used
+                                     # purely so this automated action still has an
+                                     # officer_id to attribute to in the audit trail
 
 
 def check_and_suspend(db: Session, provider_id: str, trigger_claim_id: str) -> dict:
     """
-    Checks provider flag count and suspends automatically if threshold reached.
-    Returns dict describing action taken.
+    FR-09: Called after every verification (see pipeline.py._persist_result).
+    Counts this provider's flagged claims in the last ROLLING_WINDOW_DAYS and,
+    if it has just crossed FLAG_THRESHOLD, suspends the provider immediately
+    — no admin has to notice the pattern and act on it manually — and writes
+    a 'suspended' audit_log entry recording exactly why, so the action is
+    traceable after the fact. Returns a dict describing what happened.
     """
     flag_count = _get_flag_count(db, provider_id)
     if flag_count < FLAG_THRESHOLD:

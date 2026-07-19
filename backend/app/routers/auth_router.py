@@ -18,11 +18,21 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/login")
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    """
+    Verifies email + password (bcrypt, see auth.py:hash_password) and, on
+    success, issues a signed JWT carrying the user's ID and role (auth.py:
+    create_access_token). That token is what every other protected endpoint
+    in the system checks via the require_role() dependency — this is the
+    single point where a session begins.
+    """
     user = db.execute(text("""
         SELECT user_id, full_name, password_hash, role, is_active, provider_id
         FROM system_users WHERE email = :email
     """), {"email": payload.email}).fetchone()
 
+    # Deactivated accounts (e.g. USR-SYSTEM, or a staff member an admin has
+    # deactivated) are rejected the same as a wrong email — is_active is
+    # checked before the password so a disabled account can't be brute-forced.
     if not user or not user.is_active:
         raise HTTPException(401, "Wrong email address")
     if not verify_password(payload.password, user.password_hash):

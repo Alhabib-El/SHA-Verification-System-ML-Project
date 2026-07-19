@@ -25,7 +25,20 @@ FEATURE_LABELS = {
 
 
 class SHAPExplainer:
-    """Wraps shap.TreeExplainer for the trained XGBoost model."""
+    """
+    Wraps shap.TreeExplainer for the trained XGBoost model.
+
+    Why SHAP specifically: XGBoost's raw prediction is a single probability
+    with no explanation attached — an officer cannot act on "the model says
+    0.83" alone (FR-07 requires explainability, not just a score). SHAP
+    (SHapley Additive exPlanations) decomposes that probability into an
+    additive contribution per input feature, so "0.83" becomes "amount_ratio
+    contributed +0.31, provider_claim_freq_30d contributed +0.12, ...",
+    which is what actually gets shown to the reviewing officer.
+    TreeExplainer specifically is used (rather than the model-agnostic
+    KernelExplainer) because it is exact and fast for tree-based models
+    like XGBoost, instead of an approximation.
+    """
 
     def __init__(self, trained_model):
         self.explainer = shap.TreeExplainer(trained_model)

@@ -102,7 +102,17 @@ def check_clinical_match(db: Session, diagnosis_code: str, procedure_code: str) 
     return row is not None
 
 
+# ── FEATURE ENGINEERING HELPERS ──────────────────────────────────────────────
+# Each function below computes exactly one of the 17 features in FEATURE_ORDER.
+# They are deliberately split one-feature-per-function so each can be reasoned
+# about (and unit tested) independently — every one answers a specific
+# "is this claim behaving like fraud/abuse?" question that a human claims
+# officer would also ask.
+
 def get_provider_claim_frequency_30d(db: Session, provider_id: str) -> int:
+    """How many claims has this provider submitted in the last 30 days?
+    A sudden spike in volume relative to a provider's own history is a
+    classic early indicator of upcoding or claim-mill behaviour."""
     result = db.execute(text("""
         SELECT COUNT(*) FROM claims
         WHERE provider_id = :pid
@@ -112,7 +122,10 @@ def get_provider_claim_frequency_30d(db: Session, provider_id: str) -> int:
 
 
 def get_provider_amount_zscore(db: Session, provider_id: str, claimed_amount: float) -> float:
-    """Z-score of this claim's amount vs the provider's own historical claims."""
+    """Z-score of this claim's amount vs the provider's own historical claims.
+    Standardises "unusually large" relative to what is normal for THAT
+    specific provider, rather than a flat threshold that would unfairly
+    flag high-tier hospitals that legitimately bill more."""
     row = db.execute(text("""
         SELECT AVG(claimed_amount) AS mean_amt, STDDEV(claimed_amount) AS std_amt
         FROM claims WHERE provider_id = :pid
@@ -123,6 +136,9 @@ def get_provider_amount_zscore(db: Session, provider_id: str, claimed_amount: fl
 
 
 def get_patient_facility_count_7d(db: Session, patient_id: str) -> int:
+    """How many DIFFERENT facilities has this patient claimed from in the
+    last 7 days? A patient "shopping" across many providers in a short
+    window is a known indicator of collusion or identity/card sharing."""
     result = db.execute(text("""
         SELECT COUNT(DISTINCT provider_id) FROM claims
         WHERE patient_id = :pid
@@ -132,6 +148,9 @@ def get_patient_facility_count_7d(db: Session, patient_id: str) -> int:
 
 
 def get_provider_age_days(db: Session, provider_id: str) -> int:
+    """Days since the provider was empanelled with SHA. Newer providers
+    have a shorter track record, which the model can weigh alongside the
+    other risk signals (it is not, on its own, evidence of anything)."""
     row = db.execute(text("""
         SELECT empanelment_date FROM health_providers WHERE provider_id = :pid
     """), {"pid": provider_id}).fetchone()
@@ -141,6 +160,9 @@ def get_provider_age_days(db: Session, provider_id: str) -> int:
 
 
 def get_provider_approval_rate(db: Session, provider_id: str) -> float:
+    """Share of this provider's claims (last 12 months) that were approved.
+    A provider with a historically low approval rate is a stronger prior
+    for the current claim also being problematic."""
     row = db.execute(text("""
         SELECT
             COUNT(*) FILTER (WHERE status = 'approved')::float
@@ -153,6 +175,9 @@ def get_provider_approval_rate(db: Session, provider_id: str) -> float:
 
 
 def get_patient_claim_count_90d(db: Session, patient_id: str) -> int:
+    """Total claims filed by this patient in the last 90 days — an
+    unusually high count can indicate over-utilisation or a stolen
+    membership number being used repeatedly."""
     result = db.execute(text("""
         SELECT COUNT(*) FROM claims
         WHERE patient_id = :pid
@@ -162,6 +187,9 @@ def get_patient_claim_count_90d(db: Session, patient_id: str) -> int:
 
 
 def get_repeat_diagnosis_flag(db: Session, patient_id: str, provider_id: str, diagnosis_code: str) -> int:
+    """1 if this same patient was billed by this same provider for the
+    same diagnosis within the last 30 days, else 0. Catches duplicate or
+    "recycled" claims for a condition that should already be resolved."""
     result = db.execute(text("""
         SELECT COUNT(*) FROM claims
         WHERE patient_id = :pid AND provider_id = :prov

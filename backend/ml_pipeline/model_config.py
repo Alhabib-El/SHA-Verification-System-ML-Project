@@ -52,6 +52,10 @@ def train_xgboost_model(X, y, tune_hyperparameters: bool = False):
       4. Final model trained with early stopping
       5. All runs logged to MLflow
     """
+    # 70% train / 15% validation / 15% test. `stratify=y` on both splits
+    # keeps the same fraud/valid ratio in every split — essential here since
+    # fraudulent claims are the minority class; a plain random split could
+    # easily leave the test set with too few positive examples to evaluate.
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=0.30, stratify=y, random_state=42
     )
@@ -59,6 +63,10 @@ def train_xgboost_model(X, y, tune_hyperparameters: bool = False):
         X_temp, y_temp, test_size=0.50, stratify=y_temp, random_state=42
     )
 
+    # SMOTE (Synthetic Minority Over-sampling) is applied to the TRAINING
+    # split only — never to validation/test — so the model learns from a
+    # balanced view of "what fraud looks like" while still being evaluated
+    # against the real, imbalanced distribution it will see in production.
     X_train_res, y_train_res = apply_smote(X_train, y_train)
 
     # SMOTE already rebalances the training set to ~1:1, so applying the
@@ -101,6 +109,12 @@ def train_xgboost_model(X, y, tune_hyperparameters: bool = False):
         y_pred = model.predict(X_test)
         y_proba = model.predict_proba(X_test)[:, 1]
 
+        # F1 balances precision and recall for the "invalid claim" class —
+        # important because both false positives (flagging a legitimate
+        # claim) and false negatives (missing real fraud) carry real cost.
+        # AUC-ROC measures ranking quality independent of any one threshold,
+        # which matters because DEFAULT_FLAG_THRESHOLD (in pipeline.py) can
+        # be tuned later without retraining the model.
         metrics = {
             "test_f1_score": f1_score(y_test, y_pred),
             "test_auc_roc":  roc_auc_score(y_test, y_proba),

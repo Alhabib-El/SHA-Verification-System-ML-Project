@@ -1,6 +1,10 @@
 """
 app/routers/suspension.py
-Auto-suspension API endpoints.
+FR-09 — Auto-suspension API endpoints. These are the read/admin-facing
+counterpart to the automatic logic in ml_pipeline/auto_suspend.py, which
+actually performs the suspension as a side effect of claim verification.
+This router lets the UI show risk levels before suspension happens
+(/status, /at-risk) and lets an admin manually undo one (/reinstate).
 """
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,9 +29,12 @@ def _get_flag_count(db: Session, provider_id: str) -> int:
     return result or 0
 
 
+# ── SINGLE-PROVIDER RISK STATUS ────────────────────────────────────────────────
 @router.get("/status/{provider_id}")
 def flag_status(provider_id: str, db: Session = Depends(get_db),
                 _=Depends(require_role("admin", "officer"))):
+    """How close is this one provider to auto-suspension right now? Powers
+    the risk badge shown against a provider in the Admin CRUD table."""
     flags = _get_flag_count(db, provider_id)
     row = db.execute(text(
         "SELECT status, risk_tier FROM health_providers WHERE provider_id = :pid"),
@@ -44,9 +51,17 @@ def flag_status(provider_id: str, db: Session = Depends(get_db),
     }
 
 
+# ── EARLY-WARNING LIST ─────────────────────────────────────────────────────────
 @router.get("/at-risk")
 def at_risk_providers(db: Session = Depends(get_db),
                        _=Depends(require_role("admin", "officer"))):
+    """
+    Providers with 4+ flags in the rolling window — already suspended ones
+    included, so the frontend's suspension banner/toast can detect a
+    just-suspended provider by checking status == 'suspended' in this same
+    list. The >=4 floor (rather than showing every provider) keeps this an
+    actual "watch list" instead of noise.
+    """
     rows = db.execute(text(f"""
         SELECT p.provider_id, p.name, p.county, p.status,
                COUNT(*) FILTER (WHERE vr.is_flagged = TRUE
@@ -70,9 +85,18 @@ class ReinstateRequest(BaseModel):
     reason: str
 
 
+# ── MANUAL REINSTATEMENT ───────────────────────────────────────────────────────
 @router.post("/reinstate")
 def reinstate(payload: ReinstateRequest, db: Session = Depends(get_db),
               user=Depends(require_role("admin"))):
+    """
+    Admin-only override to lift an auto-suspension after investigating.
+    Requires a written reason (min 10 chars) and permanently records it in
+    audit_log as an 'overridden' action — reinstatement always leaves
+    risk_tier at 'high' rather than resetting to 'low', so the provider
+    stays visibly flagged for closer attention going forward even though
+    they're active again.
+    """
     if len(payload.reason) < 10:
         raise HTTPException(400, "Detailed reason required (min 10 chars)")
     row = db.execute(text(
